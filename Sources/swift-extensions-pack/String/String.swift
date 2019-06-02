@@ -15,33 +15,33 @@ extension String {
     }
     
     // regexp: "string"["^\\w+$"]
-    public subscript(pattern: String) -> String? {
+    public subscript(pattern: String) -> String {
         get {
-            var result : String?
-            
             do {
                 let regexp = try NSRegularExpression(pattern: pattern)
                 let matches = regexp.matches(in: self, options: [], range: NSRange(location: 0, length: self.count))
                 
                 for match in matches {
-                    let rangeOfMatch = match.range(at: 0) // beru range v stroke po nomeru iz sovpadeniy => {2, 5}
-                    if rangeOfMatch.length <= 0 { continue } // ZAGLUSHKA - BRED!!! Esli vlozhennost ((\d)|(\d)) gluk rangeOfMatch mozhet bit tipa {3123123, 0}
+                    // beru range v stroke po nomeru iz sovpadeniy => {2, 5}
+                    let rangeOfMatch = match.range(at: 0)
+                    // ZAGLUSHKA - BRED!!! Esli vlozhennost ((\d)|(\d)) gluk rangeOfMatch mozhet bit tipa {3123123, 0}
+                    // [BUG] If ((\d)|(\d)) then we can have the rangeOfMatch for example as this {3123123, 0}
+                    if rangeOfMatch.length <= 0 { continue }
                     
                     let resultRange = self.index(self.startIndex, offsetBy: rangeOfMatch.location) ..<
                         self.index(self.startIndex, offsetBy: rangeOfMatch.location+rangeOfMatch.length)
                     
-                    result = String(self[resultRange])
-                    break
+                    return String(self[resultRange])
                 }
             } catch {}
             
-            return result
+            return ""
         }
     }
     
     // regexp: "string"["^\\w+$"]
     public subscript(pattern: String) -> Bool {
-        get { return self[pattern] != nil }
+        get { return self[pattern] != "" }
     }
     
     public func regexp(_ pattern: String) -> [Int:String]? {
