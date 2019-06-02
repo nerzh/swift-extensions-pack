@@ -10,11 +10,12 @@ import Foundation
 extension String {
     
     public func toModel<T>(model: T.Type) -> T? where T : Decodable {
-        return try? JSONDecoder().decode(model, from: self)
+        let data = self.data(using: .utf8)!
+        return try? JSONDecoder().decode(model, from: data)
     }
     
     // regexp: "string"["^\\w+$"]
-    subscript(pattern: String) -> String? {
+    public subscript(pattern: String) -> String? {
         get {
             var result : String?
             
@@ -39,11 +40,11 @@ extension String {
     }
     
     // regexp: "string"["^\\w+$"]
-    subscript(pattern: String) -> Bool {
+    public subscript(pattern: String) -> Bool {
         get { return self[pattern] != nil }
     }
     
-    func regexp(_ pattern: String) -> [Int:String]? {
+    public func regexp(_ pattern: String) -> [Int:String]? {
         var result : [Int:String]?
         
         do {
