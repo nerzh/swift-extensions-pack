@@ -16,7 +16,8 @@ extension Double {
             var sign            = ""
             var pow             = 0
             
-            if let rgx = "\(double)".regexp("^((\\d)\\.(\\d+)|(\\d+))e(\\+|-)(\\d+)") {
+            let rgx = "\(double)".regexp("^((\\d)\\.(\\d+)|(\\d+))e(\\+|-)(\\d+)")
+            if !rgx.isEmpty {
                 sign = rgx[5]!
                 if rgx[1]?["\\."] ?? false {
                     mantissa.append(rgx[2]!)
@@ -53,7 +54,8 @@ extension Double {
                 result.append(msp.mantissa)
             }
         } else if double["\\.0$"] {
-            if let rgx = double.regexp("^(\\d+)\\.0$") {
+            let rgx = double.regexp("^(\\d+)\\.0$")
+            if !rgx.isEmpty {
                 result = "\(rgx[1]!)"
             }
         } else {

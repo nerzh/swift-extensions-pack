@@ -4,16 +4,16 @@
 import PackageDescription
 
 let package = Package(
-    name: "swift-extensions-pack",
+    name: "SwiftExtensionsPack",
     products: [
-        .library(name: "swift-extensions-pack", targets: ["swift-extensions-pack"]),
+        .library(name: "SwiftExtensionsPack", targets: ["SwiftExtensionsPack"]),
     ],
     dependencies: [
     ],
     targets: [
         .target(
-            name: "swift-extensions-pack", dependencies: []),
+            name: "SwiftExtensionsPack", dependencies: []),
         .testTarget(
-            name: "swift-extensions-packTests", dependencies: ["swift-extensions-pack"]),
+            name: "SwiftExtensionsPackTests", dependencies: ["SwiftExtensionsPack"]),
     ]
 )

@@ -12,7 +12,8 @@ extension Float {
     public func toString() -> String {
         var str = "\(self)"
         if str["e"] {
-            if let rgx = str.regexp("^(\\d)\\.(\\d+)e-(\\d+)") {
+            let rgx = str.regexp("^(\\d)\\.(\\d+)e-(\\d+)")
+            if !rgx.isEmpty {
                 
                 str = "0."
                 for _ in 1..<Int(rgx[3]!)! {
@@ -23,7 +24,8 @@ extension Float {
             }
         } else {
             if str["\\.0$"] {
-                if let rgx = str.regexp("^(\\d+)\\.0$") {
+                let rgx = str.regexp("^(\\d+)\\.0$")
+                if !rgx.isEmpty {
                     str = "\(rgx[1]!)"
                 }
             }
