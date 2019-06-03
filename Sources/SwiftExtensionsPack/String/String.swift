@@ -159,7 +159,7 @@ extension String {
     
     // "043d".hexToCharacter()
     public func hexToCharacter() -> Character {
-        return hexToCharacter(self)
+        return SwiftExtensionsPack.hexToCharacter(self)
     }
 }
 
