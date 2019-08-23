@@ -6,7 +6,9 @@
 //
 
 import Foundation
-
+#if os(iOS)
+import UIKit
+#endif
 
 // MARK: REGEXP
 extension String {
@@ -165,6 +167,7 @@ extension String {
 
 
 
+#if os(iOS)
 
 // MARK: Calculate height
 extension String {
@@ -192,7 +195,7 @@ extension String {
         ).height
     }
 }
-
+#endif
 
 
 
