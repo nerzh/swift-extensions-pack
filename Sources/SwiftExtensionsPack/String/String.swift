@@ -8,7 +8,7 @@
 import Foundation
 
 
-// REGEXP
+// MARK: REGEXP
 extension String {
     
     // regexp: "string"["^\\w+$"]
@@ -142,7 +142,7 @@ extension String {
 
 
 
-// DECODE JSON
+// MARK: DECODE JSON
 extension String {
     
     public func toModel<T>(model: T.Type) -> T? where T : Decodable {
@@ -154,7 +154,7 @@ extension String {
 
 
 
-// Unicode
+// MARK: Unicode
 extension String {
     
     // "043d".hexToCharacter()
@@ -166,7 +166,37 @@ extension String {
 
 
 
-// PRIVATE HELPERS
+// MARK: Calculate height
+extension String {
+    
+    func selfHeight(_ width: CGFloat, _ font: UIFont) -> CGFloat {
+        let constraintRect = CGSize(width: width, height: CGFloat.greatestFiniteMagnitude)
+        return (self as NSString).boundingRect(
+            with: constraintRect,
+            options: NSStringDrawingOptions.usesLineFragmentOrigin,
+            attributes: [NSAttributedString.Key.font: font],
+            context: nil
+        ).height
+    }
+    
+    func selfHeight (constrainedToWidth width: Double) -> CGFloat {
+        let attributes  = [NSAttributedString.Key.font: self]
+        let attString   = NSAttributedString(string: self, attributes: attributes)
+        let framesetter = CTFramesetterCreateWithAttributedString(attString)
+        return CTFramesetterSuggestFrameSizeWithConstraints(
+            framesetter,
+            CFRange(location: 0,length: 0),
+            nil,
+            CGSize(width: width, height: Double.greatestFiniteMagnitude),
+            nil
+        ).height
+    }
+}
+
+
+
+
+// MARK: PRIVATE HELPERS
 extension String {
     
     // Helper for iterate REGEXP matches
