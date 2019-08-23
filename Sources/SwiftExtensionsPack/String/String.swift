@@ -172,7 +172,7 @@ extension String {
 // MARK: Calculate height
 extension String {
     
-    func selfHeight(_ width: CGFloat, _ font: UIFont) -> CGFloat {
+    public func selfHeight(_ width: CGFloat, _ font: UIFont) -> CGFloat {
         let constraintRect = CGSize(width: width, height: CGFloat.greatestFiniteMagnitude)
         return (self as NSString).boundingRect(
             with: constraintRect,
@@ -182,7 +182,7 @@ extension String {
         ).height
     }
     
-    func selfHeight (constrainedToWidth width: Double) -> CGFloat {
+    public func selfHeight (constrainedToWidth width: Double) -> CGFloat {
         let attributes  = [NSAttributedString.Key.font: self]
         let attString   = NSAttributedString(string: self, attributes: attributes)
         let framesetter = CTFramesetterCreateWithAttributedString(attString)
