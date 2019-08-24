@@ -104,7 +104,7 @@ extension Dictionary {
         return body.finalizeBodyAndGetData()
     }
     
-//    MARK: Ruby On Rails 
+//    MARK: Ruby On Rails
     func toRailsURI() -> String {
         var result = ""
         
@@ -132,18 +132,16 @@ extension Dictionary {
 
 
 
-// MARK: Net
-
+//  MARK: Net
 public class Net {
-    //    static let sharedSession = URLSession.shared
     private static let sessionConfiguration : URLSessionConfiguration = {
         let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest  = 1000
+        //        config.timeoutIntervalForRequest  = 1000
         //        config.timeoutIntervalForResource = 0
         return config
     }()
     
-    static let sharedSession = URLSession(configuration: sessionConfiguration)
+    public static var sharedSession = URLSession(configuration: sessionConfiguration)
     
     public enum NetErrors : Error {
         case NotValidParams
