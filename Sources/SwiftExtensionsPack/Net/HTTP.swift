@@ -5,7 +5,12 @@
 //  Created by Oleh Hudeichuk on 2/6/19.
 //
 
+#if os(Linux)
 import Foundation
+import FoundationNetworking
+#else
+import Foundation
+#endif
 
 // MARK: Session File
 struct SessionFile {
