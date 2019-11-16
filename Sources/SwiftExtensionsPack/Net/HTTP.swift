@@ -163,7 +163,7 @@ public class Net {
                               multipart: Bool=false,
                               beforeResume: (() -> ())?={},
                               afterResume: (() -> ())?={},
-                              _ handler: @escaping (Data?, URLResponse?, Error?) -> ()) throws
+                              _ handler: @escaping (Data?, URLResponse?, Error?) -> () = { _,_,_ in }) throws
     {
         let request = try makeRequest(url: url, method: method, headers: headers, params: params, body: body, multipart: multipart)
         
