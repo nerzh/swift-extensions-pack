@@ -191,6 +191,8 @@ public class Net {
         request.httpMethod          = method
         request.allHTTPHeaderFields = headers
         
+        if method.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == "get" { return request }
+        
         if multipart {
             request.httpBody = makeMultipartBody(&request, params)
         } else {
