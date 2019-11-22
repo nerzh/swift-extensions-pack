@@ -5,11 +5,9 @@
 //  Created by Oleh Hudeichuk on 2/6/19.
 //
 
-#if os(Linux)
 import Foundation
+#if canImport(FoundationNetworking)
 import FoundationNetworking
-#else
-import Foundation
 #endif
 
 // MARK: Session File
