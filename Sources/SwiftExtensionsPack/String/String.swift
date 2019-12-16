@@ -140,9 +140,9 @@ extension String {
         return result
     }
     
-    public func matchesWithRange(_ regexpPattern: String) -> [Range<String.Index>: String] {
+    public func matchesWithRange(_ regexpPattern: String) -> Array<[Range<String.Index>: String]> {
         let matches = self.matches(regexpPattern)
-        var result   = [Range<String.Index>: String]()
+        var result   = Array<[Range<String.Index>: String]>()
         for match in matches {
             var tempResultRange : Range<String.Index> = Range(NSRange(location: 0, length: 0), in: "")!
             let tempResult = eachRegexpMatchAtNumber(match) { (resultRange) -> (String?) in
@@ -150,7 +150,7 @@ extension String {
                 return String(self[resultRange])
             }
             guard let string = tempResult, let resultString = string else { continue }
-            result[tempResultRange] = resultString
+            result.append([tempResultRange:resultString])
         }
         return result
     }
