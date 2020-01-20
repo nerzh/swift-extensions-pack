@@ -102,7 +102,7 @@ extension String {
     }
     
     public mutating func replaceEachValueSelf(_ pattern: String, _ handler: (([Int:String]) -> String)) {
-        let arrayRanges = self.matchesWithRange(pattern)
+        let arrayRanges: Array<[Range<String.Index>:String]> = self.matchesWithRange(pattern)
         var orderRange  = arrayRanges.count - 1
         while(orderRange >= 0) {
             for (range, text) in arrayRanges[orderRange] {
@@ -115,7 +115,7 @@ extension String {
     
     // var s = "---|2|---  ---|34|--- ---|45|---"
     // s.replaceEachValueSelf(#"(\d+)"#) { dict in "new \(dict[1] ?? "")" }
-    //          ---|2|---  ---|new 34|--- ---|new 45|---
+    //          ---|new 2|---  ---|new 34|--- ---|new 45|---
     public func replaceEachValue(_ pattern: String, _ handler: (([Int:String]) -> String)) -> String {
         var selfString  = self
         selfString.replaceEachValueSelf(pattern, handler)
@@ -124,10 +124,25 @@ extension String {
     }
     
     // "23 34".matchesWithRange(#"\d+"#)
-    // => [ [Range<String.Index> : "23"], [Range<String.Index> : "34"] ]
-    public func matchesWithRange(_ regexpPattern: String) -> Array<[Range<String.Index>:String]> {
+    // => [Range<String.Index> : "23", Range<String.Index> : "34"]
+    public func matchesWithRange(_ regexpPattern: String) -> [Range<String.Index>: String] {
         let matches = self.matches(regexpPattern)
-        var result   = Array<[Range<String.Index>:String]>()
+        var result   = [Range<String.Index>: String]()
+        for match in matches {
+            var tempResultRange : Range<String.Index> = Range(NSRange(location: 0, length: 0), in: "")!
+            let tempResult = eachRegexpMatchAtNumber(match) { (resultRange) -> (String?) in
+                tempResultRange = resultRange
+                return String(self[resultRange])
+            }
+            guard let string = tempResult, let resultString = string else { continue }
+            result[tempResultRange] = resultString
+        }
+        return result
+    }
+    
+    public func matchesWithRange(_ regexpPattern: String) -> Array<[Range<String.Index>: String]> {
+        let matches = self.matches(regexpPattern)
+        var result   = Array<[Range<String.Index>: String]>()
         for match in matches {
             var tempResultRange : Range<String.Index> = Range(NSRange(location: 0, length: 0), in: "")!
             let tempResult = eachRegexpMatchAtNumber(match) { (resultRange) -> (String?) in

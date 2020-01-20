@@ -6,6 +6,9 @@
 //
 
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 protocol SessionFilePrtcl {
 
@@ -166,7 +169,7 @@ public class Net {
                                   session: URLSession = sharedSession,
                                   beforeResume: (() -> ())? = {},
                                   afterResume: (() -> ())? = {},
-                                  _ handler: @escaping (Data?, URLResponse?, Error?) -> ()) throws
+                                  _ handler: @escaping (Data?, URLResponse?, Error?) -> () = { _,_,_ in }) throws
     {
         let request = try makeRequest(url: url, method: method, headers: headers, params: params, body: body, multipart: multipart)
         
@@ -193,6 +196,8 @@ public class Net {
         var request                 = URLRequest(url: requestUrl)
         request.httpMethod          = method
         request.allHTTPHeaderFields = headers
+        
+        if method.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == "get" { return request }
         
         if multipart {
             request.httpBody = makeMultipartBody(&request, params)
