@@ -30,6 +30,7 @@ public struct NetSessionFile: NetSessionFilePrtcl {
 
 // MARK: Extension NSMutableData
 extension NSMutableData {
+    
     func appendString(_ string: String) {
         let data = string.data(using: String.Encoding.utf8, allowLossyConversion: false)
         append(data!)
@@ -37,12 +38,12 @@ extension NSMutableData {
 }
 
 // MARK: Multipart
-class MultipartData {
-    var body                   : NSMutableData = NSMutableData()
+public class NetMultipartData {
+    public var body                   : NSMutableData = NSMutableData()
     private var _boundary      : String        = ""
     private var boundaryPrefix : String        = ""
     private var finishBoundary : String        = ""
-    var boundary : String {
+    public var boundary : String {
         set {
             _boundary      = newValue
             boundaryPrefix = "--\(newValue)\r\n"
@@ -51,28 +52,28 @@ class MultipartData {
         get { return _boundary }
     }
     
-    init() {
+    public init() {
         boundary = "Boundary-\(UUID().uuidString)"
     }
     
-    init(boundary: String) {
+    public init(boundary: String) {
         self.boundary = boundary
     }
     
-    func append(_ name: String, _ value: Any) {
+    public func append(_ name: String, _ value: Any) {
         body.appendString(boundaryPrefix)
         body.appendString("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n")
         body.appendString("\(value)\r\n")
     }
     
-    func appendFile(_ name: String, _ data: Data, _ fileName: String) {
+    public func appendFile(_ name: String, _ data: Data, _ fileName: String) {
         body.appendString(boundaryPrefix)
         body.appendString("Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(fileName)\"\r\n")
         body.append(data)
         body.appendString("\r\n")
     }
     
-    func appendFile(_ name: String, _ data: Data, _ fileName: String, mimeType: String) {
+    public func appendFile(_ name: String, _ data: Data, _ fileName: String, mimeType: String) {
         body.appendString(boundaryPrefix)
         body.appendString("Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(fileName)\"\r\n")
         body.appendString("Content-Type: \(mimeType)\r\n\r\n")
@@ -80,7 +81,7 @@ class MultipartData {
         body.appendString("\r\n")
     }
     
-    func finalizeBodyAndGetData() -> NSMutableData {
+    public func finalizeBodyAndGetData() -> NSMutableData {
         finalizeBody()
         return body
     }
@@ -88,60 +89,44 @@ class MultipartData {
     private func finalizeBody() {
         body.appendString(finishBoundary)
     }
+
+    public func toRailsMultipartData(_ anyObject: Any) -> NSMutableData {
+
+        func checkValue(_ parentName: String, _ anyObject: Any) {
+            if let array = anyObject as? Array<Any> {
+                for (index, element) in array.enumerated() {
+                    let newNodeName = "\(parentName)[\(index)]"
+                    checkValue(newNodeName, element)
+                }
+            } else if let dictionary = anyObject as? Dictionary<String, Any> {
+                for key in dictionary.keys {
+                    let newNodeName = parentName.count == 0 ? "\(key)" : "\(parentName)[\(key)]"
+                    checkValue(newNodeName, dictionary[key]!)
+                }
+            } else {
+                if let file = anyObject as? NetSessionFilePrtcl {
+                    appendFile(parentName, file.data, file.fileName)
+                } else {
+                    append(parentName, anyObject)
+                }
+            }
+        }
+
+        checkValue("", anyObject as AnyObject)
+        return finalizeBodyAndGetData()
+    }
 }
 
 // MARK: Extension Dictionary to Multipart (Recursive)
 extension Dictionary {
     
-    func toRailsMultipartData(_ body: MultipartData) -> NSMutableData {
-        
-        func checkValue(_ parentName: String, _ anyObject: Any, _ body: MultipartData) {
-            if let array = anyObject as? Array<Any> {
-                for (index, element) in array.enumerated() {
-                    let newNodeName = "\(parentName)[\(index)]"
-                    checkValue(newNodeName, element, body)
-                }
-            } else if let dictionary = anyObject as? Dictionary<String, Any> {
-                for key in dictionary.keys {
-                    let newNodeName = parentName.count == 0 ? "\(key)" : "\(parentName)[\(key)]"
-                    checkValue(newNodeName, dictionary[key]!, body)
-                }
-            } else {
-                if let file = anyObject as? NetSessionFilePrtcl {
-                    body.appendFile(parentName, file.data, file.fileName)
-                } else {
-                    body.append(parentName, anyObject)
-                }
-            }
-        }
-        
-        checkValue("", self as AnyObject, body)
-        return body.finalizeBodyAndGetData()
+    func toRailsMultipartData() -> NSMutableData {
+        return NetMultipartData().toRailsMultipartData(self)
     }
     
     //    MARK: Ruby On Rails
-    func toRailsURI() -> String {
-        var result = ""
-        
-        func checkValue(_ parentName: String, _ anyObject: AnyObject, _ queryParams: inout String) {
-            if let array = anyObject as? Array<AnyObject> {
-                for (index, element) in array.enumerated() {
-                    let newNodeName = "\(parentName)[\(index)]"
-                    checkValue(newNodeName, element, &queryParams)
-                }
-            } else if let dictionary = anyObject as? Dictionary<String,AnyObject> {
-                for key in dictionary.keys {
-                    let newNodeName = parentName.count == 0 ? "\(key)" : "\(parentName)[\(key)]"
-                    checkValue(newNodeName, dictionary[key]!, &queryParams)
-                }
-            } else {
-                let pair = queryParams.count == 0 ? "\(parentName)=\(anyObject)" : "&\(parentName)=\(anyObject)"
-                queryParams.append(pair)
-            }
-        }
-        
-        checkValue("", self as AnyObject, &result)
-        return result
+    func toRailsQueryParams() -> String {
+        return Net.toRailsQueryParams(self)
     }
 }
 
@@ -228,11 +213,11 @@ public class Net {
     }
     
     private class func makeMultipartBody(_ request: inout URLRequest, _ params: [String:Any]?) -> Data? {
-        let body = MultipartData()
+        let body = NetMultipartData()
         request.setValue("multipart/form-data; boundary=\(body.boundary)", forHTTPHeaderField: "Content-Type")
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         
-        return (params ?? [:]).toRailsMultipartData(body) as Data
+        return body.toRailsMultipartData(params ?? [:]) as Data
     }
     
     public class func makeQueryParamsString(_ params: [String:Any]?) -> String {
@@ -244,11 +229,21 @@ public class Net {
     }
     
     public class func paramsString(_ params: [String:Any]?) -> String {
+        return toRailsQueryParams(params)
+    }
+    
+    public class func urlEncode(_ string: String) -> String {
+        var allowedCharacters = CharacterSet.alphanumerics
+        allowedCharacters.insert(charactersIn: ".-_")
+        return string.addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? ""
+    }
+
+    public class func toQueryParams(_ params: [String:Any]?) -> String {
         var paramsString          = ""
         var first                 = true
         let separator : Character = "&"
         guard let params = params else { return paramsString }
-        
+
         for (key, value) in params {
             if first {
                 first = false
@@ -257,14 +252,31 @@ public class Net {
                 paramsString += "\(separator)\(key)=\(urlEncode("\(value)"))"
             }
         }
-        
+
         return paramsString
     }
-    
-    public class func urlEncode(_ string: String) -> String {
-        var allowedCharacters = CharacterSet.alphanumerics
-        allowedCharacters.insert(charactersIn: ".-_")
-        return string.addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? ""
+
+    public class func toRailsQueryParams(_ anyObject: Any) -> String {
+        func checkValue(_ parentName: String, _ anyObject: AnyObject, _ queryParams: inout String) {
+            if let array = anyObject as? Array<AnyObject> {
+                for (index, element) in array.enumerated() {
+                    let newNodeName = "\(parentName)[\(index)]"
+                    checkValue(newNodeName, element, &queryParams)
+                }
+            } else if let dictionary = anyObject as? Dictionary<String,AnyObject> {
+                for key in dictionary.keys {
+                    let newNodeName = parentName.count == 0 ? "\(key)" : "\(parentName)[\(key)]"
+                    checkValue(newNodeName, dictionary[key]!, &queryParams)
+                }
+            } else {
+                let pair = queryParams.count == 0 ? "\(parentName)=\(anyObject)" : "&\(parentName)=\(anyObject)"
+                queryParams.append(pair)
+            }
+        }
+
+        var result = ""
+        checkValue("", anyObject as AnyObject, &result)
+        return result
     }
 }
 
