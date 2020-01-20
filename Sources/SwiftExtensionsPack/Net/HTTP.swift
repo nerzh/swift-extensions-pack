@@ -10,17 +10,17 @@ import Foundation
 import FoundationNetworking
 #endif
 
-protocol SessionFilePrtcl {
+public protocol SessionFilePrtcl {
 
     var data: Data { get set }
     var fileName: String { get set }
 }
 
 // MARK: Session File
-struct SessionFile: SessionFilePrtcl {
+public struct SessionFile: SessionFilePrtcl {
     
-    var data: Data
-    var fileName: String
+    public var data: Data
+    public var fileName: String
 }
 
 // MARK: Extension NSMutableData
