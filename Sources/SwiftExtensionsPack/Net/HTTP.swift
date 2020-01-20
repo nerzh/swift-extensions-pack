@@ -7,8 +7,15 @@
 
 import Foundation
 
+protocol SessionFilePrtcl {
+
+    var data: Data { get set }
+    var fileName: String { get set }
+}
+
 // MARK: Session File
-struct SessionFile {
+struct SessionFile: SessionFilePrtcl {
+    
     var data: Data
     var fileName: String
 }
@@ -92,7 +99,7 @@ extension Dictionary {
                     checkValue(newNodeName, dictionary[key]!, body)
                 }
             } else {
-                if let file = anyObject as? SessionFile {
+                if let file = anyObject as? SessionFilePrtcl {
                     body.appendFile(parentName, file.data, file.fileName)
                 } else {
                     body.append(parentName, anyObject)
@@ -104,7 +111,7 @@ extension Dictionary {
         return body.finalizeBodyAndGetData()
     }
     
-//    MARK: Ruby On Rails
+    //    MARK: Ruby On Rails
     func toRailsURI() -> String {
         var result = ""
         
@@ -151,14 +158,15 @@ public class Net {
     
     
     public class func sendRequest(url: String,
-                              method: String,
-                              headers: [String:String]?=nil,
-                              params: [String:Any]?=nil,
-                              body: Data?=nil,
-                              multipart: Bool=false,
-                              beforeResume: (() -> ())?={},
-                              afterResume: (() -> ())?={},
-                              _ handler: @escaping (Data?, URLResponse?, Error?) -> ()) throws
+                                  method: String,
+                                  headers: [String:String]? = nil,
+                                  params: [String:Any]? = nil,
+                                  body: Data? = nil,
+                                  multipart: Bool = false,
+                                  session: URLSession = sharedSession,
+                                  beforeResume: (() -> ())? = {},
+                                  afterResume: (() -> ())? = {},
+                                  _ handler: @escaping (Data?, URLResponse?, Error?) -> ()) throws
     {
         let request = try makeRequest(url: url, method: method, headers: headers, params: params, body: body, multipart: multipart)
         
