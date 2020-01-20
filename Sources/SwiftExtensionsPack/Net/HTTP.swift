@@ -10,17 +10,22 @@ import Foundation
 import FoundationNetworking
 #endif
 
-public protocol SessionFilePrtcl {
+public protocol NetSessionFilePrtcl {
 
     var data: Data { get set }
     var fileName: String { get set }
 }
 
 // MARK: Session File
-public struct SessionFile: SessionFilePrtcl {
+public struct NetSessionFile: NetSessionFilePrtcl {
     
     public var data: Data
     public var fileName: String
+
+    public init(data: Data, fileName: String) {
+        self.data = data
+        self.fileName = fileName
+    }
 }
 
 // MARK: Extension NSMutableData
@@ -102,7 +107,7 @@ extension Dictionary {
                     checkValue(newNodeName, dictionary[key]!, body)
                 }
             } else {
-                if let file = anyObject as? SessionFilePrtcl {
+                if let file = anyObject as? NetSessionFilePrtcl {
                     body.appendFile(parentName, file.data, file.fileName)
                 } else {
                     body.append(parentName, anyObject)
