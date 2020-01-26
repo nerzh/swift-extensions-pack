@@ -229,7 +229,7 @@ public class Net {
     }
     
     public class func paramsString(_ params: [String:Any]?) -> String {
-        return urlEncode(toRailsQueryParams(params))
+        return toRailsQueryParams(params)
     }
     
     public class func urlEncode(_ string: String) -> String {
@@ -269,7 +269,8 @@ public class Net {
                     checkValue(newNodeName, dictionary[key]!, &queryParams)
                 }
             } else {
-                let pair = queryParams.count == 0 ? "\(parentName)=\(anyObject)" : "&\(parentName)=\(anyObject)"
+                let value = urlEncode("\(anyObject)")
+                let pair = queryParams.count == 0 ? "\(parentName)=\(value)" : "&\(parentName)=\(value)"
                 queryParams.append(pair)
             }
         }
