@@ -229,7 +229,7 @@ public class Net {
     }
     
     public class func paramsString(_ params: [String:Any]?) -> String {
-        return toRailsQueryParams(params)
+        return urlEncode(toRailsQueryParams(params))
     }
     
     public class func urlEncode(_ string: String) -> String {
