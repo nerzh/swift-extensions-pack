@@ -12,19 +12,22 @@ import FoundationNetworking
 
 public protocol NetSessionFilePrtcl {
 
+    var mimeType: String { get set }
     var data: Data { get set }
     var fileName: String { get set }
 }
 
 // MARK: Session File
 public struct NetSessionFile: NetSessionFilePrtcl {
-    
+
     public var data: Data
     public var fileName: String
+    public var mimeType: String
 
-    public init(data: Data, fileName: String) {
+    public init(data: Data, fileName: String, mimeType: String) {
         self.data = data
         self.fileName = fileName
+        self.mimeType = mimeType
     }
 }
 
@@ -32,14 +35,16 @@ public struct NetSessionFile: NetSessionFilePrtcl {
 extension NSMutableData {
     
     func appendString(_ string: String) {
-        let data = string.data(using: String.Encoding.utf8, allowLossyConversion: false)
-        append(data!)
+        guard let data = string.data(using: String.Encoding.utf8, allowLossyConversion: false) else {
+            fatalError("Can Not Convert String: \(string) to Data")
+        }
+        append(data)
     }
 }
 
 // MARK: Multipart
 public class NetMultipartData {
-    public var body                   : NSMutableData = NSMutableData()
+    public var body            : NSMutableData = NSMutableData()
     private var _boundary      : String        = ""
     private var boundaryPrefix : String        = ""
     private var finishBoundary : String        = ""
@@ -64,13 +69,6 @@ public class NetMultipartData {
         body.appendString(boundaryPrefix)
         body.appendString("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n")
         body.appendString("\(value)\r\n")
-    }
-    
-    public func appendFile(_ name: String, _ data: Data, _ fileName: String) {
-        body.appendString(boundaryPrefix)
-        body.appendString("Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(fileName)\"\r\n")
-        body.append(data)
-        body.appendString("\r\n")
     }
     
     public func appendFile(_ name: String, _ data: Data, _ fileName: String, mimeType: String) {
@@ -105,7 +103,7 @@ public class NetMultipartData {
                 }
             } else {
                 if let file = anyObject as? NetSessionFilePrtcl {
-                    appendFile(parentName, file.data, file.fileName)
+                    appendFile(parentName, file.data, file.fileName, mimeType: file.mimeType)
                 } else {
                     append(parentName, anyObject)
                 }
@@ -148,8 +146,7 @@ public class Net {
         case SomeError
         case BadData
     }
-    
-    
+
     public class func sendRequest(url: String,
                                   method: String,
                                   headers: [String:String]? = nil,
@@ -157,8 +154,8 @@ public class Net {
                                   body: Data? = nil,
                                   multipart: Bool = false,
                                   session: URLSession = sharedSession,
-                                  beforeResume: (() -> ())? = {},
-                                  afterResume: (() -> ())? = {},
+                                  beforeResume: (() -> Void)? = {},
+                                  afterResume: (() -> Void)? = {},
                                   _ handler: @escaping (Data?, URLResponse?, Error?) -> () = { _,_,_ in }) throws
     {
         let request = try makeRequest(url: url, method: method, headers: headers, params: params, body: body, multipart: multipart)
@@ -176,12 +173,12 @@ public class Net {
     
     private class func makeRequest(url: String,
                             method: String,
-                            headers: [String:String]?=nil,
-                            params: [String:Any]?=nil,
-                            body: Data?=nil,
-                            multipart: Bool=false) throws -> URLRequest
+                            headers: [String: String]? = nil,
+                            params: [String: Any]? = nil,
+                            body: Data? = nil,
+                            multipart: Bool = false) throws -> URLRequest
     {
-        let fullUrl = "\(url)\(makeQueryParamsString(params))"
+        let fullUrl = multipart ? url : "\(url)\(makeQueryParamsString(params))"
         guard let requestUrl = URL(string: fullUrl) else { throw NetErrors.NotValidParams }
         var request                 = URLRequest(url: requestUrl)
         request.httpMethod          = method
@@ -190,37 +187,17 @@ public class Net {
         if method.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == "get" { return request }
         
         if multipart {
-            request.httpBody = makeMultipartBody(&request, params)
+            request.setMultipartBody(from: params)
+        } else if let body = body {
+            request.httpBody = body
         } else {
-            request.httpBody = makeBody(params, body)
+            request.setBody(from: params)
         }
-        
-        
+
         return request
     }
     
-    
-    private class func makeBody(_ params: [String:Any]?, _ body: Data?) -> Data? {
-        var result : Data?
-        
-        if let body = body {
-            result = body
-        } else {
-            result = paramsString(params).data(using: String.Encoding.utf8)
-        }
-        
-        return result
-    }
-    
-    private class func makeMultipartBody(_ request: inout URLRequest, _ params: [String:Any]?) -> Data? {
-        let body = NetMultipartData()
-        request.setValue("multipart/form-data; boundary=\(body.boundary)", forHTTPHeaderField: "Content-Type")
-        request.addValue("application/json", forHTTPHeaderField: "Accept")
-        
-        return body.toRailsMultipartData(params ?? [:]) as Data
-    }
-    
-    public class func makeQueryParamsString(_ params: [String:Any]?) -> String {
+    public class func makeQueryParamsString(_ params: [String: Any]?) -> String {
         guard let params = params else { return "" }
         var queryParamsString = params.count > 0 ? "?" : ""
         queryParamsString.append(paramsString(params))
@@ -228,7 +205,7 @@ public class Net {
         return queryParamsString
     }
     
-    public class func paramsString(_ params: [String:Any]?) -> String {
+    public class func paramsString(_ params: [String: Any]?) -> String {
         return toRailsQueryParams(params)
     }
     
@@ -281,3 +258,18 @@ public class Net {
     }
 }
 
+
+extension URLRequest {
+
+    mutating func setMultipartBody(from params: [String:Any]?) {
+        let body = NetMultipartData()
+        self.setValue("multipart/form-data; boundary=\(body.boundary)", forHTTPHeaderField: "Content-Type")
+        self.addValue("application/json", forHTTPHeaderField: "Accept")
+
+        self.httpBody = body.toRailsMultipartData(params ?? [:]) as Data
+    }
+
+    mutating func setBody(from params: [String:Any]?) {
+        self.httpBody = Net.paramsString(params).data(using: String.Encoding.utf8)
+    }
+}
