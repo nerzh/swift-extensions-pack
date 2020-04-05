@@ -1,13 +1,12 @@
 //
-//  String+iOS.swift
+//  String+Height.swift
 //  
 //
 //  Created by Oleh Hudeichuk on 05.04.2020.
 //
 
-import Foundation
-
 #if os(iOS)
+import Foundation
 import UIKit
 
 // MARK: Calculate height

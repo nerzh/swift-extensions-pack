@@ -10,40 +10,46 @@ import Foundation
 // MARK: REGEXP
 extension String {
 
-    /// regexp: "string"["^\\w+$"]
-    public subscript(pattern: String) -> String {
+    /// regexp: "string"[#"^\w+$"#]
+    /// => string
+    public subscript(regexpPattern: String) -> String {
         get {
-            var result  = ""
-            let matches = self.matches(pattern)
-            for match in matches {
-                let tempResult = eachRegexpMatchAtNumber(match) { (resultRange) -> (String?) in String(self[resultRange]) }
-                guard let string = tempResult, let resultString = string else { continue }
-                result = resultString
+            var result = ""
+            let range = NSRange(location: 0, length: self.utf16.count)
+            let regex = try? NSRegularExpression(pattern: regexpPattern)
+            if let range = regexpMatchAtNumber(regex?.firstMatch(in: self, options: [], range: range)) {
+                result = String(self[range])
             }
 
             return result
         }
     }
 
-    /// regexp: "string"["^\\w+$"]
-    public subscript(pattern: String) -> Bool {
-        get { return self[pattern] != "" }
+    /// regexp: "string"[#"^\w+$"#]
+    /// => true
+    public subscript(regexpPattern: String) -> Bool {
+        get {
+            if let regex = try? NSRegularExpression(pattern: regexpPattern) {
+                let range = NSRange(location: 0, length: self.utf16.count)
+                return regex.firstMatch(in: self, options: [], range: range) != nil
+            }
+            return false
+        }
     }
 
-    /// regexp: "match".regexp("(ma)([\\s\\S]+)")
+    /// regexp: "match".regexp(#"(ma)([\s\S]+)"#)
     /// => [0: "match", 1: "ma", 2:"tch"]
-    public func regexp(_ pattern: String) -> [Int:String] {
-        var result  = [Int:String]()
-        let matches = self.matches(pattern)
+    public func regexp(_ regexpPattern: String, _ options: NSRegularExpression.Options = []) -> [Int:String] {
+        var result = [Int:String]()
+        let matches = self.matches(regexpPattern, options)
         if matches.count > 0 { result = [Int:String]() }
 
         var lastIndex = matches.count - 1
-        while(lastIndex >= 0) {
+        while lastIndex >= 0 {
             let match = matches[lastIndex]
             for number in 0..<match.numberOfRanges {
-                if let string = eachRegexpMatchAtNumber(match, number, { (resultRange)->(String?) in String(self[resultRange])})
-                {
-                    result[number] = string
+                if let resultRange = regexpMatchAtNumber(match, number) {
+                    result[number] = String(self[resultRange])
                 }
             }
             lastIndex -= 1
@@ -52,102 +58,127 @@ extension String {
         return result
     }
 
-    /// "111 Hello 111".replaceAll(#"\d+"#, "!!!") => "!!! Hello !!!"
-    public func replaceAll(_ pattern: String, _ value: String) -> String {
-        return self.replacingOccurrences(of: self[pattern], with: value)
-    }
-
-    public func replaceAll(_ pattern: String, _ handler: (([Int:String]) -> String)) -> String {
-        let value = handler(self.regexp(pattern))
-        return self.replaceAll(pattern, value)
-    }
-
-    public mutating func replaceAllSelf(_ pattern: String, _ value: String) {
-        self = self.replacingOccurrences(of: self[pattern], with: value)
-    }
-
-    public mutating func replaceAllSelf(_ pattern: String, _ handler: (([Int:String]) -> String)) {
-        let value = handler(self.regexp(pattern))
-        self.replaceAllSelf(pattern, value)
-    }
-
-    /// "111 Hello 111".replace(#"\d+"#, "!!!") => "!!! Hello 111"
-    public func replace(_ pattern: String, _ value: String) -> String {
-        var result  = self
-        let matches = self.matches(pattern)
-        for match in matches {
-            if (eachRegexpMatchAtNumber(match) { (resultRange)->() in result.replaceSubrange(resultRange, with: value) }) != nil {
-                break
-            }
-        }
-
+    /// "111 Hello 111".replaceFirst(#"\d+"#, "!!!")
+    /// => "!!! Hello 111"
+    public func replaceFirst(_ regexpPattern: String,
+                             _ value: String,
+                             _ options: NSRegularExpression.Options = []
+    ) -> String {
+        var result = self
+        result.replaceFirstSelf(regexpPattern, value, options)
         return result
     }
 
-    public func replace(_ pattern: String, _ handler: (([Int:String]) -> String)) -> String {
-        let value = handler(self.regexp(pattern))
-        return self.replace(pattern, value)
+    /// "111 Hello 111".replaceFirstSelf(#"\d+"#, "!!!")
+    /// Mutating "!!! Hello 111"
+    public mutating func replaceFirstSelf(_ regexpPattern: String,
+                                          _ value: String,
+                                          _ options: NSRegularExpression.Options = []
+    ) {
+        let range = NSRange(location: 0, length: self.utf16.count)
+        let regex = try! NSRegularExpression(pattern: regexpPattern, options: options)
+        if let resultRange = regexpMatchAtNumber(regex.firstMatch(in: self, options: [], range: range)) {
+            self.replaceSubrange(resultRange, with: value)
+        }
     }
 
-    public mutating func replaceSelf(_ pattern: String, _ value: String) {
-        self = self.replace(pattern, value)
+    /// "111 Hello 111".replaceFirst(#"\d+"#) { (value) -> String in  return value == "111" ? "???" : value }
+    ///  => "??? Hello 111"
+    public func replaceFirst(_ regexpPattern: String,
+                             _ options: NSRegularExpression.Options = [],
+                             _ handler: (String) -> String
+    ) -> String {
+        var result = self
+        result.replaceFirstSelf(regexpPattern, options, handler)
+        return result
     }
 
-    public mutating func replaceSelf(_ pattern: String, _ handler: (([Int:String]) -> String)) {
-        let value = handler(self.regexp(pattern))
-        self.replaceSelf(pattern, value)
+    /// "111 Hello 111".replaceFirstSelf(#"\d+"#) { (value) -> String in  return value == "111" ? "???" : value }
+    /// Mutate to "??? Hello 111"
+    public mutating func replaceFirstSelf(_ regexpPattern: String,
+                                          _ options: NSRegularExpression.Options = [],
+                                          _ handler: (String) -> String
+    ) {
+        let range = NSRange(location: 0, length: self.utf16.count)
+        let regex = try! NSRegularExpression(pattern: regexpPattern, options: options)
+        if let resultRange = regexpMatchAtNumber(regex.firstMatch(in: self, options: [], range: range)) {
+            self.replaceSubrange(resultRange, with: handler(String(self[resultRange])))
+        }
     }
 
-    public mutating func replaceEachValueSelf(_ pattern: String, _ handler: (([Int:String]) -> String)) {
-        let arrayRanges: Array<[Range<String.Index>:String]> = self.matchesWithRange(pattern)
-        var orderRange  = arrayRanges.count - 1
-        while(orderRange >= 0) {
+    /// "111 Hello 111".replace(#"\d+"#, "!!!")
+    /// =>  "!!! Hello !!!"
+    public func replace(_ regexpPattern: String,
+                        _ value: String,
+                        _ options: NSRegularExpression.Options = []
+    ) -> String {
+        var result = self
+        result.replaceSelf(regexpPattern, value, options)
+        return result
+    }
+
+    /// "111 Hello 111".replaceSelf(#"\d+"#, "!!!")
+    /// Mutate to  "!!! Hello !!!"
+    public mutating func replaceSelf(_ regexpPattern: String,
+                                     _ value: String,
+                                     _ options: NSRegularExpression.Options = []
+    ) {
+        if let regex: NSRegularExpression = try? .init(pattern: regexpPattern, options: options) {
+            self = regex.stringByReplacingMatches(in: self,
+                                                  options: [],
+                                                  range: NSMakeRange(0, self.count),
+                                                  withTemplate: value)
+        }
+    }
+
+    /// "111 Hello 222".replace(#"\d+"#) { (value) -> String in  return value == "222" ? "111" : value }
+    /// =>  "111 Hello 111"
+    public func replace(_ regexpPattern: String,
+                        _ options: NSRegularExpression.Options = [],
+                        _ handler: (String) -> String
+    ) -> String {
+        var result = self
+        result.replaceSelf(regexpPattern, options, handler)
+        return result
+    }
+
+    /// "111 Hello 222".replaceSelf(#"\d+"#) { (value) -> String in  return value == "222" ? "111" : value }
+    /// Mutate to "111 Hello 111"
+    public mutating func replaceSelf(_ regexpPattern: String,
+                                     _ options: NSRegularExpression.Options = [],
+                                     _ handler: (String) -> String
+    ) {
+        let arrayRanges: [[Range<String.Index>: String]] = self.matchesWithRange(regexpPattern)
+        var orderRange: Int = arrayRanges.count - 1
+        while orderRange >= 0 {
             for (range, text) in arrayRanges[orderRange] {
-                let value = handler(text.regexp(pattern))
+                let value: String = handler(text)
                 self.replaceSubrange(range, with: value)
             }
             orderRange -= 1
         }
     }
 
-    /// var s = "---|2|---  ---|34|--- ---|45|---"
-    /// s.replaceEachValueSelf(#"(\d+)"#) { dict in "new \(dict[1] ?? "")" }
-    ///          ---|new 2|---  ---|new 34|--- ---|new 45|---
-    public func replaceEachValue(_ pattern: String, _ handler: (([Int:String]) -> String)) -> String {
-        var selfString  = self
-        selfString.replaceEachValueSelf(pattern, handler)
-
-        return selfString
-    }
-
     /// "23 34".matchesWithRange(#"\d+"#)
     /// => [Range<String.Index> : "23", Range<String.Index> : "34"]
-    public func matchesWithRange(_ regexpPattern: String) -> [Range<String.Index>: String] {
-        let matches = self.matches(regexpPattern)
-        var result   = [Range<String.Index>: String]()
-        for match in matches {
-            var tempResultRange : Range<String.Index> = Range(NSRange(location: 0, length: 0), in: "")!
-            let tempResult = eachRegexpMatchAtNumber(match) { (resultRange) -> (String?) in
-                tempResultRange = resultRange
-                return String(self[resultRange])
-            }
-            guard let string = tempResult, let resultString = string else { continue }
-            result[tempResultRange] = resultString
+    public func matchesWithRange(_ regexpPattern: String,
+                                 _ options: NSRegularExpression.Options = []
+    ) -> [Range<String.Index>: String] {
+        var result = [Range<String.Index>: String]()
+        iterateFoundRanges(regexpPattern, options) { (resultRange) in
+            result[resultRange] = String(self[resultRange])
         }
         return result
     }
 
-    public func matchesWithRange(_ regexpPattern: String) -> Array<[Range<String.Index>: String]> {
-        let matches = self.matches(regexpPattern)
-        var result   = Array<[Range<String.Index>: String]>()
-        for match in matches {
-            var tempResultRange : Range<String.Index> = Range(NSRange(location: 0, length: 0), in: "")!
-            let tempResult = eachRegexpMatchAtNumber(match) { (resultRange) -> (String?) in
-                tempResultRange = resultRange
-                return String(self[resultRange])
-            }
-            guard let string = tempResult, let resultString = string else { continue }
-            result.append([tempResultRange:resultString])
+    /// "23 34".matchesWithRange(#"\d+"#)
+    /// => [[Range<String.Index> : "23", Range<String.Index> : "34"]]
+    public func matchesWithRange(_ regexpPattern: String,
+                                 _ options: NSRegularExpression.Options = []
+    ) -> [[Range<String.Index>: String]] {
+        var result = Array<[Range<String.Index>: String]>()
+        iterateFoundRanges(regexpPattern, options) { (resultRange) in
+            result.append([resultRange: String(self[resultRange])])
         }
         return result
     }
@@ -159,36 +190,41 @@ extension String {
 extension String {
 
     /// Helper for iterate REGEXP matches
-    private func eachRegexpMatchAtNumber<T>(
-        _ match:             NSTextCheckingResult,
-        _ number:            Int=0,
-        _ handler:           (Range<String.Index>) throws -> (T)
-        ) rethrows -> T?
-    {
+    private func regexpMatchAtNumber(_ maybeMatch: NSTextCheckingResult?, _ number: Int = 0) -> Range<String.Index>? {
+        guard let match = maybeMatch else { return nil }
         /// beru range v stroke po nomeru iz sovpadeniy => {2, 5}
-        let rangeOfMatch = match.range(at: number)
+        let rangeOfMatch: NSRange = match.range(at: number)
         /// ZAGLUSHKA - BRED!!! Esli vlozhennost ((\d)|(\d)) gluk rangeOfMatch mozhet bit tipa {3123123, 0}
         /// [BUG] If ((\d)|(\d)) then we can have the rangeOfMatch for example as this {3123123, 0}
         if rangeOfMatch.length <= 0 { return nil }
 
-        let startLocation = rangeOfMatch.location
-        let endLocation   = startLocation + rangeOfMatch.length
-        let resultRange = self.index(self.startIndex, offsetBy: startLocation) ..<
-            self.index(self.startIndex, offsetBy: endLocation)
-
-        return try handler(resultRange)
+        let startLocation: Int = rangeOfMatch.location
+        let endLocation: Int = startLocation + rangeOfMatch.length
+        return self.index(self.startIndex, offsetBy: startLocation) ..< self.index(self.startIndex, offsetBy: endLocation)
     }
 
-    private func matches(
-        _ pattern: String,
-        options:   NSRegularExpression.MatchingOptions = []
-        ) -> [NSTextCheckingResult] {
+    private func matches(_ regexpPattern: String,
+                         _ regexpOptions: NSRegularExpression.Options = [],
+                         _ matchOptions: NSRegularExpression.MatchingOptions = []
+    ) -> [NSTextCheckingResult] {
         do {
-            let regexp = try NSRegularExpression(pattern: pattern)
-            return regexp.matches(in: self, options: options, range: NSRange(location: 0, length: self.count))
+            let regexp: NSRegularExpression = try .init(pattern: regexpPattern, options: regexpOptions)
+            return regexp.matches(in: self, options: matchOptions, range: NSRange(location: 0, length: self.count))
         } catch {
             return []
         }
     }
-}
 
+    private func iterateFoundRanges(_ regexpPattern: String,
+                                    _ regexpOptions: NSRegularExpression.Options = [],
+                                    _ matchOptions: NSRegularExpression.MatchingOptions = [],
+                                    _ handler: (Range<String.Index>) -> Void
+    ) {
+        let matches: [NSTextCheckingResult] = self.matches(regexpPattern, regexpOptions, matchOptions)
+        for match in matches {
+            if let range = regexpMatchAtNumber(match) {
+                handler(range)
+            }
+        }
+    }
+}
