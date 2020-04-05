@@ -1,5 +1,5 @@
 //
-//  Common.swift
+//  CommonMethods.swift
 //  swift-extensions-pack
 //
 //  Created by Oleh Hudeichuk on 2/6/19.
