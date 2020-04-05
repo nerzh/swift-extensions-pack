@@ -5,7 +5,6 @@
 //  Created by Oleh Hudeichuk on 05.04.2020.
 //
 
-#if os(iOS)
 #if canImport(CommonCrypto)
 import Foundation
 import CommonCrypto
@@ -84,6 +83,4 @@ extension String {
     }
 }
 /// END
-
-#endif
 #endif
