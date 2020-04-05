@@ -24,7 +24,7 @@
 
 ```swift
 "111 Hello 111".replaceFirst(#"\d+"#, "!!!") 
-/// => String: "!!! Hello !!!"
+/// => String: "!!! Hello 111"
 ```
 
 ```swift
