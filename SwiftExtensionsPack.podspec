@@ -9,7 +9,7 @@
 Pod::Spec.new do |s|
   s.name          = 'SwiftExtensionsPack'
   s.module_name   = 'SwiftExtensionsPack'
-  s.version       = '0.2.9'
+  s.version       = '0.3.0'
   s.summary       = '🏰 SwiftExtensionPack'
 
   s.swift_version = '5.1'
