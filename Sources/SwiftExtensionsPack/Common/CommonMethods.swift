@@ -16,7 +16,7 @@ public func autoReleasePool<T>(_ execute: () throws -> T) rethrows -> T {
     #endif
 }
 
-
+#if os(Linux) || os(macOS)
 @available(swift, introduced: 5)
 @available(OSX 10.13, *)
 public func systemCommand(_ command: String, _ user: String? = nil) throws -> String {
@@ -42,3 +42,4 @@ public func systemCommand(_ command: String, _ user: String? = nil) throws -> St
 
     return result
 }
+#endif
