@@ -16,6 +16,36 @@ public func autoReleasePool<T>(_ execute: () throws -> T) rethrows -> T {
     #endif
 }
 
+public func isNumeric(_ anyObject: Any) -> Bool {
+    var result: Bool = false
+
+    if anyObject is Int {
+        result = true
+    } else if anyObject is Int8 {
+        result = true
+    } else if anyObject is Int16 {
+        result = true
+    } else if anyObject is Int32 {
+        result = true
+    } else if anyObject is Int64 {
+        result = true
+    } else if anyObject is Float {
+        result = true
+    } else if anyObject is Float32 {
+        result = true
+    } else if anyObject is Float64 {
+        result = true
+    } else if anyObject is Float80 {
+        result = true
+    } else if anyObject is Double {
+        result = true
+    } else if anyObject is Decimal {
+        result = true
+    }
+
+    return result
+}
+
 #if os(Linux) || os(macOS)
 @available(swift, introduced: 5)
 @available(OSX 10.13, *)
@@ -43,3 +73,4 @@ public func systemCommand(_ command: String, _ user: String? = nil) throws -> St
     return result
 }
 #endif
+

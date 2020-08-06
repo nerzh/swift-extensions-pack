@@ -89,11 +89,15 @@ public class NetMultipartData {
     }
 
     public func toRailsMultipartData(_ anyObject: Any) -> NSMutableData {
-
         func checkValue(_ parentName: String, _ anyObject: Any) {
             if let array = anyObject as? Array<Any> {
                 for (index, element) in array.enumerated() {
-                    let newNodeName = "\(parentName)[\(index)]"
+                    var newNodeName: String = .init()
+                    if isNumeric(element) || element is String {
+                        newNodeName = "\(parentName)[]"
+                    } else {
+                        newNodeName = "\(parentName)[\(index)]"
+                    }
                     checkValue(newNodeName, element)
                 }
             } else if let dictionary = anyObject as? Dictionary<String, Any> {
@@ -172,11 +176,11 @@ public class Net {
     
     
     private class func makeRequest(url: String,
-                            method: String,
-                            headers: [String: String]? = nil,
-                            params: [String: Any]? = nil,
-                            body: Data? = nil,
-                            multipart: Bool = false) throws -> URLRequest
+                                   method: String,
+                                   headers: [String: String]? = nil,
+                                   params: [String: Any]? = nil,
+                                   body: Data? = nil,
+                                   multipart: Bool = false) throws -> URLRequest
     {
         let fullUrl = multipart ? url : "\(url)\(makeQueryParamsString(params))"
         guard let requestUrl = URL(string: fullUrl) else { throw NetErrors.NotValidParams }
@@ -237,7 +241,12 @@ public class Net {
         func checkValue(_ parentName: String, _ anyObject: AnyObject, _ queryParams: inout String) {
             if let array = anyObject as? Array<AnyObject> {
                 for (index, element) in array.enumerated() {
-                    let newNodeName = "\(parentName)[\(index)]"
+                    var newNodeName: String = .init()
+                    if isNumeric(element) || element is String {
+                        newNodeName = "\(parentName)[]"
+                    } else {
+                        newNodeName = "\(parentName)[\(index)]"
+                    }
                     checkValue(newNodeName, element, &queryParams)
                 }
             } else if let dictionary = anyObject as? Dictionary<String,AnyObject> {
