@@ -17,33 +17,21 @@ public func autoReleasePool<T>(_ execute: () throws -> T) rethrows -> T {
 }
 
 public func isNumeric(_ anyObject: Any) -> Bool {
-    var result: Bool = false
+    if anyObject is Int { return true }
+    if anyObject is Int8 { return true }
+    if anyObject is Int16 { return true }
+    if anyObject is Int32 { return true }
+    if anyObject is Int64 { return true }
+    if anyObject is Float { return true }
+    if anyObject is Float32 { return true }
+    if anyObject is Float64 { return true }
+    #if os(macOS)
+    if anyObject is Float80 { return true }
+    #endif
+    if anyObject is Double { return true }
+    if anyObject is Decimal { return true }
 
-    if anyObject is Int {
-        result = true
-    } else if anyObject is Int8 {
-        result = true
-    } else if anyObject is Int16 {
-        result = true
-    } else if anyObject is Int32 {
-        result = true
-    } else if anyObject is Int64 {
-        result = true
-    } else if anyObject is Float {
-        result = true
-    } else if anyObject is Float32 {
-        result = true
-    } else if anyObject is Float64 {
-        result = true
-    } else if anyObject is Float80 {
-        result = true
-    } else if anyObject is Double {
-        result = true
-    } else if anyObject is Decimal {
-        result = true
-    }
-
-    return result
+    return false
 }
 
 #if os(Linux) || os(macOS)
