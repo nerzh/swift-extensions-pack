@@ -37,26 +37,48 @@ public func isNumeric(_ anyObject: Any) -> Bool {
 #if os(Linux) || os(macOS)
 @available(swift, introduced: 5)
 @available(OSX 10.13, *)
-public func systemCommand(_ command: String, _ user: String? = nil) throws -> String {
+public func forceKillProcess(_ process: Process) throws {
+    process.terminate()
+    usleep(1000)
+    if process.isRunning { process.interrupt() }
+    usleep(1000)
+    if process.isRunning { try systemCommand("kill -9 \(process.processIdentifier)") }
+//    while process.isRunning {
+//        try systemCommand("kill -9 \(process.processIdentifier)")
+//        usleep(1000)
+//    }
+}
+
+@available(swift, introduced: 5)
+@available(OSX 10.13, *)
+@discardableResult
+public func systemCommand(_ command: String, _ user: String? = nil, timeOutNanoseconds: UInt32 = 0) throws -> String {
     var result: String = .init()
     let process: Process = .init()
-
     let pipe: Pipe = .init()
+    var timeOutThread: Thread?
+    process.executableURL = .init(fileURLWithPath: "/usr/bin/env")
+    process.standardOutput = pipe
+    process.standardError = pipe
     if user != nil {
         process.arguments = ["sudo", "-H", "-u", user!, "bash", "-lc", "\(command)"]
     } else {
         process.arguments = ["bash", "-lc", "\(command)"]
     }
-    process.executableURL = .init(fileURLWithPath: "/usr/bin/env")
-    process.standardOutput = pipe
-    process.standardError = pipe
+    if timeOutNanoseconds > 0 {
+        timeOutThread = Thread {
+            usleep(timeOutNanoseconds)
+            try? forceKillProcess(process)
+        }
+    }
     try process.run()
+    timeOutThread?.start()
     process.waitUntilExit()
     let data: Data = pipe.fileHandleForReading.readDataToEndOfFile()
     if let output = String(data: data, encoding: .utf8) {
         result = output.trimmingCharacters(in: .whitespacesAndNewlines)
     }
-    if process.isRunning { process.terminate() }
+    if process.isRunning { try forceKillProcess(process) }
 
     return result
 }
