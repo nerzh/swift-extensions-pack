@@ -9,7 +9,7 @@
 Pod::Spec.new do |s|
   s.name          = 'SwiftExtensionsPack'
   s.module_name   = 'SwiftExtensionsPack'
-  s.version       = '0.3.0'
+  s.version       = '0.4.6'
   s.summary       = '🏰 SwiftExtensionPack'
 
   s.swift_version = '5.1'
@@ -32,4 +32,6 @@ Pod::Spec.new do |s|
 
   s.source_files = 'Sources/**/*'
   s.frameworks = 'Foundation'
+
+  s.dependency 'SwiftRegularExpression', '~> 0.2.3'
 end
