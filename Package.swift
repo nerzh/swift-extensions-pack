@@ -7,7 +7,7 @@ let package = Package(
         .library(name: "SwiftExtensionsPack", targets: ["SwiftExtensionsPack"]),
     ],
     dependencies: [
-        .package(name: "SwiftRegularExpression", url: "https://github.com/nerzh/swift-regular-expression.git", .upToNextMajor(from: "0.2.3")),
+        .package(name: "SwiftRegularExpression", url: "https://github.com/nerzh/swift-regular-expression.git", .upToNextMajor(from: "0.2.4")),
     ],
     targets: [
         .target(name: "SwiftExtensionsPack",
