@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftRegularExpression
 
 extension Double {
     
