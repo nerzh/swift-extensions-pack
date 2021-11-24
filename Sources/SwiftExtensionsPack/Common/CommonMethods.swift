@@ -84,3 +84,42 @@ public func systemCommand(_ command: String, _ user: String? = nil, timeOutNanos
 }
 #endif
 
+func anyToJSON(_ any: Any) -> String {
+    var result: String = .init()
+
+    if let value = any as? Int {
+        result = String(value)
+    } else if let value = any as? String {
+        result = "\"\(value)\""
+    } else if let value = any as? Double {
+        result = String(value)
+    } else if let value = any as? Bool {
+        result = String(value)
+    } else if let value = any as? [String: Any] {
+        result.append("{")
+        var first: Bool = true
+        for (key, val) in value {
+            if first {
+                result.append("\"\(key)\": \(anyToJSON(val))")
+            } else {
+                result.append(", \"\(key)\": \(anyToJSON(val))")
+            }
+            first = false
+        }
+        result.append("}")
+    } else if let value = any as? [Any] {
+        result.append("[")
+        var first: Bool = true
+        for val in value {
+            if first {
+                result.append("\(anyToJSON(val))")
+            } else {
+                result.append(", \(anyToJSON(val))")
+            }
+            first = false
+        }
+        result.append("]")
+    }
+
+    return result
+}

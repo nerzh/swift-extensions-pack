@@ -164,7 +164,7 @@ public class Net {
     {
         let request = try makeRequest(url: url, method: method, headers: headers, params: params, body: body, multipart: multipart)
         
-        let dataTask = sharedSession.dataTask(with: request, completionHandler: { (data, response, error) -> Void in
+        let dataTask = session.dataTask(with: request, completionHandler: { (data, response, error) -> Void in
             handler(data, response, error)
         })
         
