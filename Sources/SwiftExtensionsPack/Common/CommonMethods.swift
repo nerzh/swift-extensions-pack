@@ -25,7 +25,7 @@ public func isNumeric(_ anyObject: Any) -> Bool {
     if anyObject is Float { return true }
     if anyObject is Float32 { return true }
     if anyObject is Float64 { return true }
-    #if os(macOS)
+    #if os(macOS) && arch(x86_64)
     if anyObject is Float80 { return true }
     #endif
     if anyObject is Double { return true }
