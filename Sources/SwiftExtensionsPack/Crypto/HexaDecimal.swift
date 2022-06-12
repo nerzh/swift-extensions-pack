@@ -22,6 +22,10 @@ public extension String {
         let data: Data = .init(self.utf8)
         return data.map { String(format: "%02x", $0) }.joined()
     }
+    
+    func fromHexadecimal(encoding: String.Encoding = .utf8) -> String? {
+        String(hexadecimal: self, encoding: encoding)
+    }
 }
 
 extension Data {
