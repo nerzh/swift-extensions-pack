@@ -5,7 +5,7 @@
 //  Created by Oleh Hudeichuk on 11.06.2022.
 //
 
-#if os(macOS)
+#if os(macOS) || os(iOS)
 import Foundation
 import CommonCrypto
 
