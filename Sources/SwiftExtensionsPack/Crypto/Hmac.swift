@@ -5,6 +5,7 @@
 //  Created by Oleh Hudeichuk on 11.06.2022.
 //
 
+#if os(macOS)
 import Foundation
 import CommonCrypto
 
@@ -126,4 +127,4 @@ extension Data {
         return data.base64EncodedString()
     }
 }
-
+#endif
