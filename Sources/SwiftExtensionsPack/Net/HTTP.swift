@@ -138,6 +138,8 @@ extension Dictionary {
 public class Net {
     private static let sessionConfiguration : URLSessionConfiguration = {
         let config = URLSessionConfiguration.default
+        config.requestCachePolicy = .reloadIgnoringLocalCacheData
+        config.urlCache = nil
         //        config.timeoutIntervalForRequest  = 1000
         //        config.timeoutIntervalForResource = 0
         return config
