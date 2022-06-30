@@ -279,7 +279,6 @@ public extension Array {
 }
 
 public extension Dictionary {
-    
     func toAnyValue() -> AnyValue where Key == String, Value == Any {
         AnyValue(self)
     }

@@ -16,7 +16,7 @@ extension String {
         return try? JSONDecoder().decode(model, from: data)
     }
     
-    func toDictionary() -> [String: Any]? {
+    public func toDictionary() -> [String: Any]? {
         if let data = self.data(using: .utf8) {
             do {
                 return try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
