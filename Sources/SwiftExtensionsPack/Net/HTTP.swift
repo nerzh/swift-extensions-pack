@@ -162,12 +162,16 @@ public class Net {
                                   session: URLSession = sharedSession,
                                   beforeResume: (() -> Void)? = {},
                                   afterResume: (() -> Void)? = {},
-                                  _ handler: @escaping (Data?, URLResponse?, Error?) -> () = { _,_,_ in }) throws
+                                  _ handler: @escaping (Data?, URLResponse?, Error?) throws -> () = { _,_,_ in }) throws
     {
         let request = try makeRequest(url: url, method: method, headers: headers, params: params, body: body, multipart: multipart)
         
         let dataTask = session.dataTask(with: request, completionHandler: { (data, response, error) -> Void in
-            handler(data, response, error)
+            do {
+                try handler(data, response, error)
+            } catch {
+                try? handler(nil, nil, error)
+            }
         })
         
         if let beforeResume = beforeResume { beforeResume() }
@@ -212,7 +216,7 @@ public class Net {
     }
     
     public class func paramsString(_ params: [String: Any]?) -> String {
-        return toRailsQueryParams(params)
+        toRailsQueryParams(params)
     }
     
     public class func urlEncode(_ string: String) -> String {
@@ -239,7 +243,7 @@ public class Net {
         return paramsString
     }
 
-    public class func toRailsQueryParams(_ anyObject: Any) -> String {
+    public class func toRailsQueryParams(_ anyObject: Any?) -> String {
         func checkValue(_ parentName: String, _ anyObject: AnyObject, _ queryParams: inout String) {
             if let array = anyObject as? Array<AnyObject> {
                 for (index, element) in array.enumerated() {
@@ -263,6 +267,7 @@ public class Net {
             }
         }
 
+        if anyObject == nil { return "" }
         var result = ""
         checkValue("", anyObject as AnyObject, &result)
         return result
