@@ -70,7 +70,7 @@ extension Double {
         return self < 1 ? toString().replacingOccurrences(of: "0.", with: "").count : 0
     }
     
-    public func round(toDecimalPlaces places: Int,
+    public func round(toDecimalPlaces places: UInt,
                       rule: FloatingPointRoundingRule=FloatingPointRoundingRule.up) -> Double
     {
         let divisor = pow(10.0, Double(places))
