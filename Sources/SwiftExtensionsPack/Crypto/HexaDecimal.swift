@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftRegularExpression
 
 public extension String {
 
@@ -25,6 +26,32 @@ public extension String {
     
     func fromHexadecimal(encoding: String.Encoding = .utf8) -> String? {
         String(hexadecimal: self, encoding: encoding)
+    }
+    
+    var addHexZeroX: String {
+        if !self[#"^0x"#] {
+            return "0x\(self)"
+        }
+        return self
+    }
+    var removeHexZeroX: String { self.replace(#"^0x"#, "") }
+    var deleteHexZeroX: String { self.removeHexZeroX }
+    var add0x: String { addHexZeroX }
+    var remove0x: String { self.removeHexZeroX }
+    var delete0x: String { self.removeHexZeroX }
+    
+    /// this nedeed only for initializator Data(stringHex: hex)
+    var addFirstZeroToHexIfNeeded: String {
+        var result: String = self
+        if !result[#"^0x"#], result.count % 2 != 0 {
+            result = "0" + result
+        }
+        
+        return result
+    }
+    
+    var hexClear: String {
+        self.replace(#"^0x0+"#, "0x")
     }
 }
 
