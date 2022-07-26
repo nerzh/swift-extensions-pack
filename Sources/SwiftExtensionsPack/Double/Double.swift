@@ -40,11 +40,15 @@ extension Double {
             let msp = mantissaSignPow(double: self)
             
             if msp.sign == "+" {
-                var lengthAfterComma = msp.pow - msp.countAfterComma
-                if lengthAfterComma < 0 { lengthAfterComma = lengthAfterComma * -1 }
-                result.append(msp.mantissa)
-                for _ in 1...lengthAfterComma {
-                    result.append("0")
+                if msp.pow == msp.countAfterComma {
+                    result.append(msp.mantissa)
+                } else {
+                    var lengthAfterComma = msp.pow - msp.countAfterComma
+                    if lengthAfterComma < 0 { lengthAfterComma = lengthAfterComma * -1 }
+                    result.append(msp.mantissa)
+                    for _ in 1...lengthAfterComma {
+                        result.append("0")
+                    }
                 }
             } else {
                 result = "0."
