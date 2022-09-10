@@ -159,14 +159,14 @@ public class Net {
                                   params: [String:Any]? = nil,
                                   body: Data? = nil,
                                   multipart: Bool = false,
-                                  session: URLSession = sharedSession,
+                                  session: URLSession? = nil,
                                   beforeResume: (() -> Void)? = {},
                                   afterResume: (() -> Void)? = {},
                                   _ handler: @escaping (Data?, URLResponse?, Error?) throws -> () = { _,_,_ in }) throws
     {
         let request = try makeRequest(url: url, method: method, headers: headers, params: params, body: body, multipart: multipart)
         
-        let dataTask = session.dataTask(with: request, completionHandler: { (data, response, error) -> Void in
+        let dataTask = (session ?? sharedSession).dataTask(with: request, completionHandler: { (data, response, error) -> Void in
             do {
                 try handler(data, response, error)
             } catch {
