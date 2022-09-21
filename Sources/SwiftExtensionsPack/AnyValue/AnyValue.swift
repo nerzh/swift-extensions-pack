@@ -282,5 +282,9 @@ public extension Dictionary {
     func toAnyValue() -> AnyValue where Key == String, Value == Any {
         AnyValue(self)
     }
+    
+    func toAnyValue() -> AnyValue where Key == String, Value == Any? {
+        AnyValue(self)
+    }
 }
 
