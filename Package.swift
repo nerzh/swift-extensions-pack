@@ -1,8 +1,12 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.5
 import PackageDescription
 
 let package = Package(
     name: "SwiftExtensionsPack",
+    platforms: [
+       .macOS(.v12),
+       .iOS(.v13)
+    ],
     products: [
         .library(name: "SwiftExtensionsPack", targets: ["SwiftExtensionsPack"]),
     ],

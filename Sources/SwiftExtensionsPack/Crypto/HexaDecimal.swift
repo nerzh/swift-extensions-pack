@@ -55,7 +55,7 @@ public extension String {
     }
 }
 
-extension Data {
+public extension Data {
 
     init?(hexString: String) {
         let len = hexString.count / 2
@@ -72,6 +72,10 @@ extension Data {
             i = j
         }
         self = data
+    }
+    
+    var toHexadecimal: String {
+        self.map { String(format: "%02x", $0) }.joined()
     }
 }
 
