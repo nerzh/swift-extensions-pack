@@ -8,10 +8,14 @@
 import Foundation
 import CryptoKit
 
+@available(iOS 13, *)
+@available(macOS 12, *)
 public extension SEPCommon {
     class Crypto {}
 }
 
+@available(iOS 13, *)
+@available(macOS 12, *)
 public extension SEPCommon.Crypto {
     /// encrypt AES-256 GCM
     class func encryptAES256GCM(data: Data, key: Data, nonce: AES.GCM.Nonce = .init()) throws -> Data {
@@ -28,6 +32,8 @@ public extension SEPCommon.Crypto {
     }
 }
 
+@available(iOS 13, *)
+@available(macOS 12, *)
 public extension String {
     
     func encryptAES256(key: Data, nonce: AES.GCM.Nonce = .init()) throws -> Data {
