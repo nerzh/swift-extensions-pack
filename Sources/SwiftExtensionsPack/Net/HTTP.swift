@@ -180,6 +180,41 @@ public class Net {
         // sharedSession.finishTasksAndInvalidate()
     }
     
+    @available(iOS 13, *)
+    @available(macOS 12, *)
+    public class func sendRequest(url: String,
+                                  method: String,
+                                  headers: [String:String]? = nil,
+                                  params: [String:Any]? = nil,
+                                  body: Data? = nil,
+                                  multipart: Bool = false,
+                                  session: URLSession? = nil
+    ) async throws -> (data: Data, response: URLResponse) {
+        return try await withCheckedThrowingContinuation { continuation in
+            do {
+                try sendRequest(url: url,
+                                method: method,
+                                headers: headers,
+                                params: params,
+                                body: body,
+                                multipart: multipart,
+                                session: session,
+                                beforeResume: nil,
+                                afterResume: nil
+                ) { d, r, e in
+                    if let data = d, let response = r {
+                        continuation.resume(returning: (data: data, response: response))
+                    } else if let error = e {
+                        continuation.resume(throwing: error)
+                    } else {
+                        continuation.resume(throwing: makeError(SEPCommonError("No result from Net 🤔")))
+                    }
+                }
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
+    }
     
     private class func makeRequest(url: String,
                                    method: String,
