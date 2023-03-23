@@ -6,7 +6,8 @@
 //
 
 import Foundation
-import CryptoKit
+#if canImport(Crypto)
+import Crypto
 
 @available(iOS 13, *)
 @available(macOS 12, *)
@@ -82,5 +83,4 @@ public extension String {
         return try decryptAES256(key: try hash.dataFromHexThrowing())
     }
 }
-
-
+#endif
