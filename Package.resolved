@@ -2,15 +2,6 @@
   "object": {
     "pins": [
       {
-        "package": "swift-crypto",
-        "repositoryURL": "https://github.com/apple/swift-crypto.git",
-        "state": {
-          "branch": null,
-          "revision": "da0fe44138ab86e380f40a2acbd8a611b07d3f64",
-          "version": "2.4.0"
-        }
-      },
-      {
         "package": "SwiftRegularExpression",
         "repositoryURL": "https://github.com/nerzh/swift-regular-expression.git",
         "state": {
