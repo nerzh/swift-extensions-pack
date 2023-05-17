@@ -16,13 +16,3 @@ public func hexToCharacter(_ hexString: String) -> Character {
     }
     return result
 }
-
-
-// MARK: Unicode
-extension String {
-
-    /// "043d".hexToCharacter()
-    public func hexToCharacter() -> Character {
-        return SwiftExtensionsPack.hexToCharacter(self)
-    }
-}
