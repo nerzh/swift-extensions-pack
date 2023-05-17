@@ -1,16 +1,23 @@
 {
-  "object": {
-    "pins": [
-      {
-        "package": "SwiftRegularExpression",
-        "repositoryURL": "https://github.com/nerzh/swift-regular-expression.git",
-        "state": {
-          "branch": null,
-          "revision": "19c3e569a8e81da6f7f4ee3b73028c25737d3706",
-          "version": "0.2.4"
-        }
+  "pins" : [
+    {
+      "identity" : "swift-crypto",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-crypto.git",
+      "state" : {
+        "revision" : "da0fe44138ab86e380f40a2acbd8a611b07d3f64",
+        "version" : "2.4.0"
       }
-    ]
-  },
-  "version": 1
+    },
+    {
+      "identity" : "swift-regular-expression",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nerzh/swift-regular-expression.git",
+      "state" : {
+        "revision" : "19c3e569a8e81da6f7f4ee3b73028c25737d3706",
+        "version" : "0.2.4"
+      }
+    }
+  ],
+  "version" : 2
 }

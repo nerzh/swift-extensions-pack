@@ -1,25 +1,37 @@
-// swift-tools-version:5.5
+// swift-tools-version:5.8
 import PackageDescription
 
+let name: String = "SwiftExtensionsPack"
+
+var packageDependencies: [Package.Dependency] = [
+    .package(url: "https://github.com/nerzh/swift-regular-expression.git", .upToNextMajor(from: "0.2.4")),
+]
+
+var targetDependencies: [Target.Dependency] = [
+    .product(name: "SwiftRegularExpression", package: "swift-regular-expression"),
+]
+
+#if os(Linux) || os(macOS)
+packageDependencies.append(.package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "2.0.0")))
+targetDependencies.append(.product(name: "Crypto", package: "swift-crypto"))
+#else
+#endif
+
 let package = Package(
-    name: "SwiftExtensionsPack",
+    name: name,
     platforms: [
         .macOS(.v12)
     ],
     products: [
-        .library(name: "SwiftExtensionsPack", targets: ["SwiftExtensionsPack"]),
+        .library(name: name, targets: [name])
     ],
-    dependencies: [
-        .package(name: "SwiftRegularExpression", url: "https://github.com/nerzh/swift-regular-expression.git", .upToNextMajor(from: "0.2.4")),
-//        .package(name: "swift-crypto", url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "2.0.0")),
-    ],
+    dependencies: packageDependencies,
     targets: [
-        .target(name: "SwiftExtensionsPack",
-                dependencies: [
-                    .product(name: "SwiftRegularExpression", package: "SwiftRegularExpression"),
-//                    .product(name: "Crypto", package: "swift-crypto"),
-                ]),
+        .target(
+            name: name,
+            dependencies: targetDependencies
+        ),
         .testTarget(
-            name: "SwiftExtensionsPackTests", dependencies: ["SwiftExtensionsPack"]),
+            name: "\(name)Tests", dependencies: ["SwiftExtensionsPack"]),
     ]
 )
