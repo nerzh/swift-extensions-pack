@@ -11,20 +11,25 @@ var targetDependencies: [Target.Dependency] = [
     .product(name: "SwiftRegularExpression", package: "swift-regular-expression"),
 ]
 
-#if (os(Linux) || os(macOS))
-packageDependencies.append(.package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "2.0.0")))
-targetDependencies.append(.product(name: "Crypto", package: "swift-crypto"))
-#else
-#endif
+var platforms: [SupportedPlatform] = [
+    .iOS(.v11),
+    .macOS(.v10_13)
+]
+
+//#if (os(Linux) || os(macOS))
+//packageDependencies.append(.package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "2.0.0")))
+//targetDependencies.append(.product(name: "Crypto", package: "swift-crypto"))
+//platforms = [
+//    .iOS(.v13)
+//]
+//#else
+//#endif
 
 let package = Package(
     name: name,
-    platforms: [
-        .iOS(.v11),
-        .macOS(.v12)
-    ],
+    platforms: platforms,
     products: [
-        .library(name: name, targets: [name])
+        .library(name: name, targets: [name]),
     ],
     dependencies: packageDependencies,
     targets: [
@@ -33,6 +38,7 @@ let package = Package(
             dependencies: targetDependencies
         ),
         .testTarget(
-            name: "\(name)Tests", dependencies: ["SwiftExtensionsPack"]),
+            name: "\(name)Tests", dependencies: ["SwiftExtensionsPack"]
+        ),
     ]
 )
