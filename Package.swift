@@ -11,7 +11,7 @@ var targetDependencies: [Target.Dependency] = [
     .product(name: "SwiftRegularExpression", package: "swift-regular-expression"),
 ]
 
-#if os(Linux) || os(macOS)
+#if (os(Linux) || os(macOS))
 packageDependencies.append(.package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "2.0.0")))
 targetDependencies.append(.product(name: "Crypto", package: "swift-crypto"))
 #else
@@ -20,6 +20,7 @@ targetDependencies.append(.product(name: "Crypto", package: "swift-crypto"))
 let package = Package(
     name: name,
     platforms: [
+        .iOS(.v11),
         .macOS(.v12)
     ],
     products: [
