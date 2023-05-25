@@ -73,13 +73,6 @@ public extension String {
     func isBase64() -> Bool {
         let regexp = #"^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=)?$"#
         return self.trimmingCharacters(in: .whitespacesAndNewlines)[regexp]
-//        if
-//            let data = Data(base64Encoded: self, options: [.ignoreUnknownCharacters]),
-//            let encoded = String(data: data, encoding: .utf8)?.base64Encoded()
-//        {
-//            return encoded.trimmingCharacters(in: .whitespacesAndNewlines) == self
-//        }
-//        return false
     }
 }
 

@@ -53,6 +53,16 @@ public extension String {
     var hexClear: String {
         self.replace(#"^0x0+"#, "0x")
     }
+    
+    func dataFromHexOrBase64(_ string: String) throws -> Data {
+        if string.isHexNumber {
+            return try string.remove0x.dataFromHexThrowing()
+        } else if string.isBase64() {
+            return Data(base64Encoded: string)!
+        } else {
+            throw SEPCommonError.mess("\(string) undefined Data String format")
+        }
+    }
 }
 
 public extension Data {
