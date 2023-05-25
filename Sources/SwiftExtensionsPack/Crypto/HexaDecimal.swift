@@ -54,13 +54,13 @@ public extension String {
         self.replace(#"^0x0+"#, "0x")
     }
     
-    func dataFromHexOrBase64(_ string: String) throws -> Data {
-        if string.isHexNumber {
-            return try string.remove0x.dataFromHexThrowing()
-        } else if string.isBase64() {
-            return Data(base64Encoded: string)!
+    func dataFromHexOrBase64() throws -> Data {
+        if self.isHexNumber {
+            return try self.remove0x.dataFromHexThrowing()
+        } else if self.isBase64() {
+            return Data(base64Encoded: self)!
         } else {
-            throw SEPCommonError.mess("\(string) undefined Data String format")
+            throw SEPCommonError.mess("\(self) undefined Data String format")
         }
     }
 }
