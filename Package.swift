@@ -10,12 +10,12 @@ var packageDependencies: [Package.Dependency] = [
 
 var targetDependencies: [Target.Dependency] = [
     .product(name: "SwiftRegularExpression", package: "swift-regular-expression"),
-    .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: [.linux, .macOS])),
+    .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: [.linux])),
 ]
 
 var platforms: [SupportedPlatform] = [
     .iOS(.v11),
-    .macOS(.v10_15)
+    .macOS(.v10_13)
 ]
 
 //#if (os(Linux) || os(macOS))
