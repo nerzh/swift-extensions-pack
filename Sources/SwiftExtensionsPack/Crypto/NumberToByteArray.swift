@@ -56,10 +56,16 @@ public extension ToBytesConvertable {
     }
 }
 
+
 extension UInt16: ToBytesConvertable {}
 extension UInt32: ToBytesConvertable {}
 extension UInt64: ToBytesConvertable {}
+extension UInt: ToBytesConvertable {}
+
 
 extension Int16: ToBytesConvertable {}
 extension Int32: ToBytesConvertable {}
 extension Int64: ToBytesConvertable {}
+extension Int: ToBytesConvertable {}
+
+

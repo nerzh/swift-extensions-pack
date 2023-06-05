@@ -5,15 +5,17 @@ let name: String = "SwiftExtensionsPack"
 
 var packageDependencies: [Package.Dependency] = [
     .package(url: "https://github.com/nerzh/swift-regular-expression.git", .upToNextMajor(from: "0.2.4")),
+    .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "2.0.0"))
 ]
 
 var targetDependencies: [Target.Dependency] = [
     .product(name: "SwiftRegularExpression", package: "swift-regular-expression"),
+    .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: [.linux, .macOS])),
 ]
 
 var platforms: [SupportedPlatform] = [
     .iOS(.v11),
-    .macOS(.v10_13)
+    .macOS(.v10_15)
 ]
 
 //#if (os(Linux) || os(macOS))
