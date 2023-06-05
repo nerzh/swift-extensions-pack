@@ -19,6 +19,13 @@ public extension String {
         return try? JSONDecoder().decode(model, from: data)
     }
     
+    func toModel<T>(_ model: T.Type) throws -> T where T : Decodable {
+        guard let data = self.data(using: String.Encoding.utf8) else {
+            throw SEPCommonError("Encoding data to utf8 failed")
+        }
+        return try JSONDecoder().decode(model, from: data)
+    }
+    
     func getPointer<T>(_ handler: (_ pointer: UnsafePointer<T>, _ len: Int) throws -> Void) rethrows {
         var string = self
         try string.withUTF8 { (p: UnsafeBufferPointer<UInt8>) in

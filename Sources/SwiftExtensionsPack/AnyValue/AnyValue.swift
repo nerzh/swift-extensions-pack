@@ -286,5 +286,37 @@ public extension Dictionary {
     func toAnyValue() -> AnyValue where Key == String, Value == Any? {
         AnyValue(self)
     }
+    /// Other variants for fix Ambiguous use
+    func toAnyValue() -> AnyValue where Key == String, Value == String {
+        AnyValue(self)
+    }
+    
+    func toAnyValue() -> AnyValue where Key == String, Value == String? {
+        AnyValue(self)
+    }
+    
+    func toAnyValue() -> AnyValue where Key == String, Value == Int {
+        AnyValue(self)
+    }
+    
+    func toAnyValue() -> AnyValue where Key == String, Value == Int? {
+        AnyValue(self)
+    }
+    
+    func toAnyValue() -> AnyValue where Key == String, Value == Float {
+        AnyValue(self)
+    }
+    
+    func toAnyValue() -> AnyValue where Key == String, Value == Float? {
+        AnyValue(self)
+    }
+    
+    func toAnyValue() -> AnyValue where Key == String, Value == [Any] {
+        AnyValue(self)
+    }
+    
+    func toAnyValue() -> AnyValue where Key == String, Value == [Any]? {
+        AnyValue(self)
+    }
 }
 

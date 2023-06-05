@@ -49,7 +49,7 @@ public extension ErrorCommon {
     
     init(_ error: Error) {
         self.init()
-        self.reason = error.localizedDescription
+        self.reason = String(describing: error)
     }
 }
 
