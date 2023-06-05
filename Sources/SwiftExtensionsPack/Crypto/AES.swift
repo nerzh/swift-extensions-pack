@@ -6,8 +6,10 @@
 //
 
 import Foundation
-#if (os(Linux) || os(macOS))
+#if canImport(Crypto)
 import Crypto
+#else
+import CryptoKit
 #endif
 
 @available(iOS 13.0, macOS 10.15, *)
