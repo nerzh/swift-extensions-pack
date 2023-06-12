@@ -82,6 +82,12 @@ public func systemCommand(_ command: String, _ user: String? = nil, timeOutNanos
 
     return result
 }
+
+public func getEnvironmentVar(_ name: String) throws -> String? {
+    let content: String = try systemCommand("echo $\(name)")
+    if content.isEmpty { return nil }
+    return content
+}
 #endif
 
 func anyToJSON(_ any: Any) -> String {
@@ -123,10 +129,3 @@ func anyToJSON(_ any: Any) -> String {
 
     return result
 }
-
-public func getEnvironmentVar(_ name: String) throws -> String? {
-    let content: String = try systemCommand("echo $\(name)")
-    if content.isEmpty { return nil }
-    return content
-}
-
