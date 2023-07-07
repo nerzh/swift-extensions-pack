@@ -210,6 +210,10 @@ public enum AnyValue: Decodable, Encodable, Equatable {
         toAny() as? [String: Any?]
     }
     
+    public func toArray() -> [Any?]? {
+        toAny() as? [Any?]
+    }
+    
     private static func toAnyValue(_ value: Any?) -> AnyValue {
         if let value = value as? String {
             return AnyValue.string(value)
