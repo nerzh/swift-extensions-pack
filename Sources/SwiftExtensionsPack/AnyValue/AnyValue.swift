@@ -267,6 +267,9 @@ public enum AnyValue: Decodable, Encodable, Equatable {
         }
     }
 
+    func toModel<T: Decodable>(_ type: T.Type) throws -> T {
+        try self.toJsonThrowable().toModel(type.self)
+    }
 }
 
 public extension String {
