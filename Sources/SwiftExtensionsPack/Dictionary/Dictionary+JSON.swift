@@ -13,4 +13,8 @@ extension Dictionary {
     public func toJSONData(options: JSONSerialization.WritingOptions = []) throws -> Data {
         try JSONSerialization.data(withJSONObject: self, options: options)
     }
+    
+    public func toModel<T: Decodable>(_ type: T.Type) throws -> T {
+        try self.toJSON().toModel(type)
+    }
 }
