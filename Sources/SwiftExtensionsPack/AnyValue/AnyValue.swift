@@ -214,6 +214,10 @@ public enum AnyValue: Decodable, Encodable, Equatable {
         toAny() as? [Any?]
     }
     
+    public func toModel<T: Decodable>(_ type: T.Type) throws -> T {
+        try self.toJsonThrowable().toModel(type.self)
+    }
+    
     private static func toAnyValue(_ value: Any?) -> AnyValue {
         if let value = value as? String {
             return AnyValue.string(value)
@@ -265,10 +269,6 @@ public enum AnyValue: Decodable, Encodable, Equatable {
             return AnyValue.nil(nil)
     //            throw DecodingError.typeMismatch(JSONValue.self, DecodingError.Context(codingPath: container.codingPath, debugDescription: "Not a JSON"))
         }
-    }
-
-    func toModel<T: Decodable>(_ type: T.Type) throws -> T {
-        try self.toJsonThrowable().toModel(type.self)
     }
 }
 
