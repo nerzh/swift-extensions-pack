@@ -93,10 +93,10 @@ public protocol SafeArrayPrtcl {
         return try array.withUnsafeBytes(body)
     }
     
-    public func filter(_ isIncluded: (Element) throws -> Bool) rethrows -> [Element] {
+    public func filter(_ isIncluded: (Element) throws -> Bool) rethrows -> SafeArray<Element> {
         lock.lock()
         defer { lock.unlock() }
-        return try array.filter(isIncluded)
+        return try SafeArray<Element>(array.filter(isIncluded))
     }
     
     public func dropLast(_ k: Int) -> ArraySlice<Element> {
@@ -201,16 +201,16 @@ public protocol SafeArrayPrtcl {
         return try array.partition(by: belongsInSecondPartition)
     }
     
-    public func shuffled<T>(using generator: inout T) -> [Element] where T : RandomNumberGenerator {
+    public func shuffled<T>(using generator: inout T) -> SafeArray<Element> where T : RandomNumberGenerator {
         lock.lock()
         defer { lock.unlock() }
-        return array.shuffled(using: &generator)
+        return SafeArray<Element>(array.shuffled(using: &generator))
     }
     
-    public func shuffled() -> [Element] {
+    public func shuffled() -> SafeArray<Element> {
         lock.lock()
         defer { lock.unlock() }
-        return array.shuffled()
+        return SafeArray<Element>(array.shuffled())
     }
     
     public mutating func shuffle<T>(using generator: inout T) where T : RandomNumberGenerator {
@@ -529,10 +529,10 @@ public protocol SafeArrayPrtcl {
         return try array.compactMap(transform)
     }
     
-    public func sorted(by areInIncreasingOrder: (Element, Element) throws -> Bool) rethrows -> [Element] {
+    public func sorted(by areInIncreasingOrder: (Element, Element) throws -> Bool) rethrows -> SafeArray<Element> {
         lock.lock()
         defer { lock.unlock() }
-        return try array.sorted(by: areInIncreasingOrder)
+        return try SafeArray<Element>(array.sorted(by: areInIncreasingOrder))
     }
     
     @available(macOS 13.0, iOS 16.0, watchOS 9.0, tvOS 16.0, *)
@@ -753,9 +753,9 @@ extension SafeArray where Element : Comparable {
         return array.lexicographicallyPrecedes(other)
     }
 
-    public func sorted() -> [Element] {
+    public func sorted() -> SafeArray<Element> {
         lock.lock()
         defer { lock.unlock() }
-        return array.sorted()
+        return SafeArray<Element>(array.sorted())
     }
 }
