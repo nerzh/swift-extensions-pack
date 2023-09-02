@@ -86,10 +86,10 @@ import Foundation
     }
     
     @available(swift 4.0)
-    public func filter(_ isIncluded: (Dictionary<Key, Value>.Element) throws -> Bool) rethrows -> [Key : Value] {
+    public func filter(_ isIncluded: (Dictionary<Key, Value>.Element) throws -> Bool) rethrows -> SafeDictionary<Key, Value> {
         lock.lock()
         defer { lock.unlock() }
-        return try dictionary.filter(isIncluded)
+        return try SafeDictionary<Key, Value>(uniqueKeysWithValues: dictionary.filter(isIncluded))
     }
     
     @discardableResult
@@ -120,23 +120,25 @@ import Foundation
     public func merging<S>(
         _ other: S,
         uniquingKeysWith combine: (Value, Value) throws -> Value
-    ) rethrows -> [Key : Value] where S : Sequence, S.Element == (Key, Value) {
+    ) rethrows -> SafeDictionary<Key, Value> where S : Sequence, S.Element == (Key, Value) {
         lock.lock()
         defer { lock.unlock() }
-        return try dictionary.merging(other, uniquingKeysWith: combine)
+        let tuples = try dictionary.merging(other, uniquingKeysWith: combine).map { ($0, $1) }
+        return SafeDictionary<Key, Value>(uniqueKeysWithValues: tuples)
     }
     
     public func merging(
         _ other: [Key : Value],
         uniquingKeysWith combine: (Value, Value) throws -> Value
-    ) rethrows -> [Key : Value] {
+    ) rethrows -> SafeDictionary<Key, Value> {
         lock.lock()
         defer { lock.unlock() }
-        return try dictionary.merging(other, uniquingKeysWith: combine)
+        let tuples = try dictionary.merging(other, uniquingKeysWith: combine).map { ($0, $1) }
+        return SafeDictionary<Key, Value>(uniqueKeysWithValues: tuples)
     }
     
     @discardableResult
-    public mutating func remove(at index: Dictionary<Key, Value>.Index) -> Dictionary<Key, Value>.Element {
+    public mutating func remove(at index: Dictionary<Key, Value>.Index) -> SafeDictionary<Key, Value>.Element {
         lock.lock()
         defer { lock.unlock() }
         return dictionary.remove(at: index)
