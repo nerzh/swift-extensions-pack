@@ -10,7 +10,7 @@ import Foundation
 @frozen public struct SafeValue<Value> {
     private let lock: NSRecursiveLock = .init()
     private var _value: Value
-    var value: Value {
+    public var value: Value {
         get {
             lock.lock()
             defer { lock.unlock() }

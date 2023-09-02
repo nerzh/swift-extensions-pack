@@ -10,7 +10,7 @@ import Foundation
 /// @SEPAtomic var threadSafeVariable: [Int] = [1 , 2,  3]
 @available(swift, introduced: 5.1)
 @propertyWrapper
-struct SEPAtomic<Value> {
+struct SEPAtomic<Value: AnyObject> {
 
     private var value: Value
     private let lock = NSLock()
