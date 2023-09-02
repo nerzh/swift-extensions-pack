@@ -7,7 +7,7 @@
 
 import Foundation
 
-@frozen public struct SafeValue<Value> {
+public class SafeValue<Value> {
     private let lock: NSRecursiveLock = .init()
     private var _value: Value
     public var value: Value {
@@ -22,7 +22,7 @@ import Foundation
         _value = value
     }
     
-    public mutating func change(_ callback: (inout Value) -> Void) {
+    public func change(_ callback: (inout Value) -> Void) {
         lock.lock()
         defer { lock.unlock() }
         callback(&_value)

@@ -13,7 +13,7 @@ public protocol SafeArrayPrtcl {
     var array: Array<Element> { get set }
 }
 
-@frozen public struct SafeArray<Element>: CustomStringConvertible, CustomDebugStringConvertible {
+final public class SafeArray<Element>: CustomStringConvertible, CustomDebugStringConvertible {
     private let lock: NSLock = .init()
     private var array: Array<Element>
     public var description: String { array.description }
@@ -65,7 +65,7 @@ public protocol SafeArrayPrtcl {
         return try array.withUnsafeBufferPointer(body)
     }
     
-    public mutating func withUnsafeMutableBufferPointer<R>(
+    public func withUnsafeMutableBufferPointer<R>(
         _ body: (inout UnsafeMutableBufferPointer<Element>) throws -> R
     ) rethrows -> R {
         lock.lock()
@@ -73,7 +73,7 @@ public protocol SafeArrayPrtcl {
         return try array.withUnsafeMutableBufferPointer(body)
     }
     
-    public mutating func replaceSubrange<C>(
+    public func replaceSubrange<C>(
         _ subrange: Range<Int>, with newElements: C
     ) where Element == C.Element, C : Collection {
         lock.lock()
@@ -81,7 +81,7 @@ public protocol SafeArrayPrtcl {
         array.replaceSubrange(subrange, with: newElements)
     }
     
-    public mutating func withUnsafeMutableBytes<R>(_ body: (UnsafeMutableRawBufferPointer) throws -> R) rethrows -> R {
+    public func withUnsafeMutableBytes<R>(_ body: (UnsafeMutableRawBufferPointer) throws -> R) rethrows -> R {
         lock.lock()
         defer { lock.unlock() }
         return try array.withUnsafeMutableBytes(body)
@@ -195,7 +195,7 @@ public protocol SafeArrayPrtcl {
         return try array.lastIndex(where: predicate)
     }
     
-    public mutating func partition(by belongsInSecondPartition: (Element) throws -> Bool) rethrows -> Int {
+    public func partition(by belongsInSecondPartition: (Element) throws -> Bool) rethrows -> Int {
         lock.lock()
         defer { lock.unlock() }
         return try array.partition(by: belongsInSecondPartition)
@@ -213,13 +213,13 @@ public protocol SafeArrayPrtcl {
         return SafeArray<Element>(array.shuffled())
     }
     
-    public mutating func shuffle<T>(using generator: inout T) where T : RandomNumberGenerator {
+    public func shuffle<T>(using generator: inout T) where T : RandomNumberGenerator {
         lock.lock()
         defer { lock.unlock() }
         return array.shuffle(using: &generator)
     }
     
-    public mutating func shuffle() {
+    public func shuffle() {
         lock.lock()
         defer { lock.unlock() }
         array.shuffle()
@@ -254,7 +254,7 @@ public protocol SafeArrayPrtcl {
         return try array.flatMap(transform)
     }
     
-    public mutating func withContiguousMutableStorageIfAvailable<R>(
+    public func withContiguousMutableStorageIfAvailable<R>(
         _ body: (inout UnsafeMutableBufferPointer<Element>) throws -> R
     ) rethrows -> R? {
         lock.lock()
@@ -262,7 +262,7 @@ public protocol SafeArrayPrtcl {
         return try array.withContiguousMutableStorageIfAvailable(body)
     }
     
-    public mutating func swapAt(_ i: Int, _ j: Int) {
+    public func swapAt(_ i: Int, _ j: Int) {
         lock.lock()
         defer { lock.unlock() }
         array.swapAt(i, j)
@@ -288,69 +288,69 @@ public protocol SafeArrayPrtcl {
         array = Array(elements)
     }
     
-    public mutating func append(_ newElement: Element) {
+    public func append(_ newElement: Element) {
         lock.lock()
         defer { lock.unlock() }
         array.append(newElement)
     }
     
-    public mutating func append<S>(contentsOf newElements: S) where S : Sequence, Element == S.Element {
+    public func append<S>(contentsOf newElements: S) where S : Sequence, Element == S.Element {
         lock.lock()
         defer { lock.unlock() }
         array.append(contentsOf: newElements)
     }
     
-    public mutating func insert(_ newElement: Element, at i: Int) {
+    public func insert(_ newElement: Element, at i: Int) {
         lock.lock()
         defer { lock.unlock() }
         array.insert(newElement, at: i)
     }
     
-    public mutating func insert<C>(contentsOf newElements: C, at i: Int) where C : Collection, Element == C.Element {
+    public func insert<C>(contentsOf newElements: C, at i: Int) where C : Collection, Element == C.Element {
         lock.lock()
         defer { lock.unlock() }
         array.insert(contentsOf: newElements, at: i)
     }
     
     @discardableResult
-    public mutating func remove(at position: Int) -> Element {
+    public func remove(at position: Int) -> Element {
         lock.lock()
         defer { lock.unlock() }
         return array.remove(at: position)
     }
     
-    public mutating func removeSubrange(_ bounds: Range<Int>) {
+    public func removeSubrange(_ bounds: Range<Int>) {
         lock.lock()
         defer { lock.unlock() }
         array.removeSubrange(bounds)
     }
     
-    public mutating func removeFirst(_ k: Int) {
+    public func removeFirst(_ k: Int) {
         lock.lock()
         defer { lock.unlock() }
         array.removeFirst(k)
     }
     
     @discardableResult
-    public mutating func removeFirst() -> Element {
+    public func removeFirst() -> Element {
         lock.lock()
         defer { lock.unlock() }
         return array.removeFirst()
     }
     
-    public mutating func removeAll(keepingCapacity keepCapacity: Bool = false) {
+    public func removeAll(keepingCapacity keepCapacity: Bool = false) {
         lock.lock()
         defer { lock.unlock() }
         array.removeAll(keepingCapacity: keepCapacity)
     }
     
-    public mutating func reserveCapacity(_ n: Int) {
+    public func reserveCapacity(_ n: Int) {
         lock.lock()
         defer { lock.unlock() }
         array.reserveCapacity(n)
     }
     
-    public mutating func replaceSubrange<C, R>(
+    public func replaceSubrange<C, R>(
         _ subrange: R, with newElements: C
     ) where C : Collection, R : RangeExpression, Element == C.Element, Int == R.Bound {
         lock.lock()
@@ -358,26 +358,26 @@ public protocol SafeArrayPrtcl {
         array.replaceSubrange(subrange, with: newElements)
     }
     
-    public mutating func removeSubrange<R>(_ bounds: R) where R : RangeExpression, Int == R.Bound {
+    public func removeSubrange<R>(_ bounds: R) where R : RangeExpression, Int == R.Bound {
         lock.lock()
         defer { lock.unlock() }
         array.removeSubrange(bounds)
     }
     
-    public mutating func popLast() -> Element? {
+    public func popLast() -> Element? {
         lock.lock()
         defer { lock.unlock() }
         return array.popLast()
     }
     
     @discardableResult
-    public mutating func removeLast() -> Element {
+    public func removeLast() -> Element {
         lock.lock()
         defer { lock.unlock() }
         return array.removeLast()
     }
     
-    public mutating func removeLast(_ k: Int) {
+    public func removeLast(_ k: Int) {
         lock.lock()
         defer { lock.unlock() }
         return array.removeLast(k)
@@ -419,13 +419,13 @@ public protocol SafeArrayPrtcl {
         return lhs.array + rhs.array
     }
     
-    public mutating func removeAll(where shouldBeRemoved: (Element) throws -> Bool) rethrows {
+    public func removeAll(where shouldBeRemoved: (Element) throws -> Bool) rethrows {
         lock.lock()
         defer { lock.unlock() }
         try array.removeAll(where: shouldBeRemoved)
     }
     
-    public mutating func reverse() {
+    public func reverse() {
         lock.lock()
         defer { lock.unlock() }
         array.reverse()
@@ -536,7 +536,7 @@ public protocol SafeArrayPrtcl {
     }
     
     @available(macOS 13.0, iOS 16.0, watchOS 9.0, tvOS 16.0, *)
-    public mutating func trimPrefix(while predicate: (Element) throws -> Bool) rethrows {
+    public func trimPrefix(while predicate: (Element) throws -> Bool) rethrows {
         lock.lock()
         defer { lock.unlock() }
         return try array.trimPrefix(while: predicate)
@@ -572,7 +572,7 @@ public protocol SafeArrayPrtcl {
         return try array.starts(with: possiblePrefix, by: areEquivalent)
     }
     
-    public mutating func sort(by areInIncreasingOrder: (Element, Element) throws -> Bool) rethrows {
+    public func sort(by areInIncreasingOrder: (Element, Element) throws -> Bool) rethrows {
         lock.lock()
         defer { lock.unlock() }
         return try array.sort(by: areInIncreasingOrder)
@@ -684,8 +684,8 @@ extension SafeArray : Encodable where Element : Encodable {
 
 extension SafeArray : Decodable where Element : Decodable {
 
-    public init(from decoder: Decoder) throws {
-        array = try Array<Element>(from: decoder)
+    public convenience init(from decoder: Decoder) throws {
+        self.init(try Array<Element>(from: decoder))
     }
 }
 
@@ -718,7 +718,7 @@ extension SafeArray : Hashable where Element : Hashable {
 
 extension SafeArray where Element : Comparable {
 
-    public mutating func sort() {
+    public func sort() {
         lock.lock()
         defer { lock.unlock() }
         array.sort()

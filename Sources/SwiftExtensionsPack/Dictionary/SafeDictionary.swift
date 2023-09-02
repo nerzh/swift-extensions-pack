@@ -7,7 +7,7 @@
 
 import Foundation
 
-@frozen public struct SafeDictionary<Key: Hashable, Value>: CustomStringConvertible, CustomDebugStringConvertible {
+final public class SafeDictionary<Key: Hashable, Value>: CustomStringConvertible, CustomDebugStringConvertible {
     
     private let lock: NSLock = .init()
     private var dictionary: Dictionary<Key, Value>
@@ -93,13 +93,13 @@ import Foundation
     }
     
     @discardableResult
-    public mutating func updateValue(_ value: Value, forKey key: Key) -> Value? {
+    public func updateValue(_ value: Value, forKey key: Key) -> Value? {
         lock.lock()
         defer { lock.unlock() }
         return dictionary.updateValue(value, forKey: key)
     }
     
-    public mutating func merge<S>(
+    public func merge<S>(
         _ other: S,
         uniquingKeysWith combine: (Value, Value) throws -> Value
     ) rethrows where S : Sequence, S.Element == (Key, Value) {
@@ -108,7 +108,7 @@ import Foundation
         try dictionary.merge(other, uniquingKeysWith: combine)
     }
     
-    public mutating func merge(
+    public func merge(
         _ other: [Key : Value],
         uniquingKeysWith combine: (Value, Value) throws -> Value
     ) rethrows {
@@ -138,20 +138,20 @@ import Foundation
     }
     
     @discardableResult
-    public mutating func remove(at index: Dictionary<Key, Value>.Index) -> SafeDictionary<Key, Value>.Element {
+    public func remove(at index: Dictionary<Key, Value>.Index) -> SafeDictionary<Key, Value>.Element {
         lock.lock()
         defer { lock.unlock() }
         return dictionary.remove(at: index)
     }
     
     @discardableResult
-    public mutating func removeValue(forKey key: Key) -> Value? {
+    public func removeValue(forKey key: Key) -> Value? {
         lock.lock()
         defer { lock.unlock() }
         return dictionary.removeValue(forKey: key)
     }
     
-    public mutating func removeAll(keepingCapacity keepCapacity: Bool = false) {
+    public func removeAll(keepingCapacity keepCapacity: Bool = false) {
         lock.lock()
         defer { lock.unlock() }
         dictionary.removeAll(keepingCapacity: keepCapacity)
@@ -159,7 +159,7 @@ import Foundation
     
     public typealias Element = Dictionary<Key, Value>.Element
     
-    public mutating func popFirst() -> SafeDictionary<Key, Value>.Element? {
+    public func popFirst() -> SafeDictionary<Key, Value>.Element? {
         lock.lock()
         defer { lock.unlock() }
         return dictionary.popFirst()
@@ -171,7 +171,7 @@ import Foundation
         return dictionary.capacity
     }
     
-    public mutating func reserveCapacity(_ minimumCapacity: Int) {
+    public func reserveCapacity(_ minimumCapacity: Int) {
         lock.lock()
         defer { lock.unlock() }
         dictionary.reserveCapacity(minimumCapacity)
@@ -521,5 +521,12 @@ extension SafeDictionary : Encodable where Key : Encodable, Value : Encodable {
         lock.lock()
         defer { lock.unlock() }
         try dictionary.encode(to: encoder)
+    }
+}
+
+extension SafeDictionary : Decodable where Key : Decodable, Value : Decodable {
+    
+    public convenience init(from decoder: Decoder) throws {
+        try self.init(uniqueKeysWithValues: Dictionary<Key, Value>(from: decoder).map { ($0, $1) })
     }
 }
