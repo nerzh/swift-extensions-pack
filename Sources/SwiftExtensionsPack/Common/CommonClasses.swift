@@ -10,7 +10,7 @@ import Foundation
 open class SEPCommon {
 
     /// threadSafe common DateFormatter
-    @SEPAtomic static var defaultDateFormatter: DateFormatter = {
+    @Atomic static var defaultDateFormatter: DateFormatter = {
         let dateFormatter: DateFormatter = .init()
         dateFormatter.dateFormat = "dd-MM-yyyy HH:mm:ss"
         return dateFormatter
