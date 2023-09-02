@@ -670,3 +670,92 @@ extension SafeArray where Element == String {
         return array.joined(separator: separator)
     }
 }
+
+extension SafeArray: Sequence {}
+
+extension SafeArray : Encodable where Element : Encodable {
+
+    public func encode(to encoder: Encoder) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        try array.encode(to: encoder)
+    }
+}
+
+extension SafeArray : Decodable where Element : Decodable {
+
+    public init(from decoder: Decoder) throws {
+        array = try Array<Element>(from: decoder)
+    }
+}
+
+extension SafeArray: Equatable where Element: Equatable {
+    public static func == (lhs: SafeArray<Element>, rhs: SafeArray<Element>) -> Bool {
+        lhs.lock.lock()
+        rhs.lock.lock()
+        defer {
+            lhs.lock.unlock()
+            rhs.lock.unlock()
+        }
+        return lhs.array == rhs.array
+    }
+}
+
+extension SafeArray : Hashable where Element : Hashable {
+
+    public func hash(into hasher: inout Hasher) {
+        lock.lock()
+        defer { lock.unlock() }
+        array.hash(into: &hasher)
+    }
+
+    public var hashValue: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return array.hashValue
+    }
+}
+
+extension SafeArray where Element : Comparable {
+
+    public mutating func sort() {
+        lock.lock()
+        defer { lock.unlock() }
+        array.sort()
+    }
+
+    @available(macOS 13.0, iOS 16.0, watchOS 9.0, tvOS 16.0, *)
+    public func firstRange<C>(of other: C) -> Range<Int>? where C : Collection, Element == C.Element {
+        lock.lock()
+        defer { lock.unlock() }
+        return array.firstRange(of: other)
+    }
+
+    @warn_unqualified_access
+    public func min() -> Element? {
+        lock.lock()
+        defer { lock.unlock() }
+        return array.min()
+    }
+
+    @warn_unqualified_access
+    public func max() -> Element? {
+        lock.lock()
+        defer { lock.unlock() }
+        return array.max()
+    }
+
+    public func lexicographicallyPrecedes<OtherSequence>(
+        _ other: OtherSequence
+    ) -> Bool where OtherSequence : Sequence, Element == OtherSequence.Element {
+        lock.lock()
+        defer { lock.unlock() }
+        return array.lexicographicallyPrecedes(other)
+    }
+
+    public func sorted() -> [Element] {
+        lock.lock()
+        defer { lock.unlock() }
+        return array.sorted()
+    }
+}
