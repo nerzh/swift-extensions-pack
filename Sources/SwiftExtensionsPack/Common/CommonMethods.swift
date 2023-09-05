@@ -129,3 +129,19 @@ func anyToJSON(_ any: Any) -> String {
 
     return result
 }
+
+/// asdf print
+public func pe(_ line: Any...) {
+    #if DEBUG
+    let content: [Any] = ["ASDF:"] + line
+    print(content.map{"\($0)"}.join(" "))
+    #endif
+}
+
+public func pp(_ line: Any...) {
+    #if DEBUG
+    let content: [Any] = line
+    print(content.map{"\($0)"}.join(" "))
+    #endif
+}
+

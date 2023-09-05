@@ -7,8 +7,8 @@
 
 import Foundation
 
-public class SafeValue<Value> {
-    private let lock: NSRecursiveLock = .init()
+final public class SafeValue<Value> {
+    private let lock: NSLock = .init()
     private var _value: Value
     public var value: Value {
         get {
