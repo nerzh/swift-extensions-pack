@@ -13,7 +13,7 @@ public protocol SafeArrayPrtcl {
     var array: Array<Element> { get set }
 }
 
-final public class SafeArray<Element>: CustomStringConvertible, CustomDebugStringConvertible {
+final public class SafeArray<Element>: CustomStringConvertible, CustomDebugStringConvertible, @unchecked Sendable {
     private let lock: NSLock = .init()
     private var array: Array<Element>
     public var description: String { array.description }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-final public class SafeValue<Value> {
+final public class SafeValue<Value>: @unchecked Sendable {
     private let lock: NSLock = .init()
     private var _value: Value
     public var value: Value {

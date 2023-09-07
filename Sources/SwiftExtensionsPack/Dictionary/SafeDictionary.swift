@@ -7,7 +7,7 @@
 
 import Foundation
 
-final public class SafeDictionary<Key: Hashable, Value>: CustomStringConvertible, CustomDebugStringConvertible {
+final public class SafeDictionary<Key: Hashable, Value>: CustomStringConvertible, CustomDebugStringConvertible, @unchecked Sendable {
     
     private let lock: NSLock = .init()
     private var dictionary: Dictionary<Key, Value>
