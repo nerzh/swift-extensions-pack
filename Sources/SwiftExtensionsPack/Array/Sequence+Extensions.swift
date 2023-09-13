@@ -1,9 +1,8 @@
 import Foundation
 
 // MARK: [1,2,3].join(", ") => "1, 2, 3"
-extension Sequence where Element: LosslessStringConvertible {
-    
-    public func join(_ separator: String) -> String {
+public extension Sequence where Element: LosslessStringConvertible {
+    func join(_ separator: String) -> String {
         var n = ""
         self.forEach { (number) in
             n.append(String(number))
@@ -14,13 +13,13 @@ extension Sequence where Element: LosslessStringConvertible {
     }
 }
 
-extension Sequence where Element: Hashable {
+public extension Sequence where Element: Hashable {
     func uniq() -> Self {
         return Array(Set(self)) as! Self
     }
 }
 
-extension Sequence {
+public extension Sequence {
     func uniq<T: Hashable>(_ by: (Element) -> T) -> Self {
         var uniqueValues: [T: Element] = .init()
         forEach { uniqueValues[by($0)] = $0 }
