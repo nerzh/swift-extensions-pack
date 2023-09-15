@@ -28,7 +28,7 @@ public func isOptionalType(_ instance: Any) -> Bool {
 }
 
 /// example: Optional<Int> is false
-public func isOptionalValue(_ instance: Any) -> Bool {
+public func isOptionalValue(_ instance: Any?) -> Bool {
     switch instance {
     case Optional<Any>.none:
         return true
