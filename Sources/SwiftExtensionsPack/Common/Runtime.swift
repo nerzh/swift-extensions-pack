@@ -26,7 +26,7 @@ public func isOptional(_ instance: Any) -> Bool {
     return mirror.displayStyle == .optional
 }
 
-public func getPropertiesInfo(_ instance: Any) -> [(name: String, value: Any, type: Any.Type, isOptional: Bool, wrappedType: Any.Type?)] {
+public func getPropertiesInfo(_ instance: Any) -> [(name: String, value: Any?, type: Any.Type, isOptional: Bool, wrappedType: Any.Type?)] {
     let mirror = Mirror(reflecting: instance)
     var result: [(name: String, value: Any, type: Any.Type, isOptional: Bool, wrappedType: Any.Type?)] = .init()
     mirror.children.forEach { child in
