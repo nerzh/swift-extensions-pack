@@ -8,9 +8,17 @@
 import Foundation
 
 public protocol Cases {
-    var `case`: String { get }
+    var caseName: String { get }
 }
 
 public extension Cases {
-    var `case`: String { "\(self)" }
+    var caseName: String { "\(String(describing: self))" }
+}
+
+public protocol AnyOptional {
+    var isNil: Bool { get }
+}
+
+extension Optional: AnyOptional {
+    public var isNil: Bool { self == nil }
 }
