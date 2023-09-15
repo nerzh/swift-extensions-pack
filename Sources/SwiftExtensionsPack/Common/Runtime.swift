@@ -21,9 +21,20 @@ extension Array: ArrayProtocol {
      func wrappedType() -> Any.Type { return Element.self }
 }
 
-public func isOptional(_ instance: Any) -> Bool {
+/// example: Optional<Int> is true
+public func isOptionalType(_ instance: Any) -> Bool {
     let mirror = Mirror(reflecting: instance)
     return mirror.displayStyle == .optional
+}
+
+/// example: Optional<Int> is false
+public func isOptionalValue(_ instance: Any) -> Bool {
+    switch instance {
+    case Optional<Any>.none:
+        return true
+    default:
+        return false
+    }
 }
 
 public func getPropertiesInfo(_ instance: Any) -> [(name: String, value: Any?, type: Any.Type, isOptional: Bool, wrappedType: Any.Type?)] {
@@ -31,7 +42,7 @@ public func getPropertiesInfo(_ instance: Any) -> [(name: String, value: Any?, t
     var result: [(name: String, value: Any, type: Any.Type, isOptional: Bool, wrappedType: Any.Type?)] = .init()
     mirror.children.forEach { child in
         if let name = child.label {
-            let isOptional: Bool = isOptional(child.value)
+            let isOptional: Bool = isOptionalType(child.value)
             var wrappedType: Any.Type?
             if child.value as? OptionalProtocol != nil {
                 wrappedType = (child.value as! OptionalProtocol).wrappedType()
