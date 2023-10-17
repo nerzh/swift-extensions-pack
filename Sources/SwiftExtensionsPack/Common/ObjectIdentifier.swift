@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class ObjectId: @unchecked Sendable {}
+public class ObjectId: @unchecked Sendable { public init() {} }
 
 public protocol ObjectIdentifiable {
     func objectId() -> ObjectIdentifier
