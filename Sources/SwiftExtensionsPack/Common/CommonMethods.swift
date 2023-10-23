@@ -49,6 +49,12 @@ public func forceKillProcess(_ process: Process) throws {
 //    }
 }
 
+public struct SystemCommandExitError: ErrorCommon {
+    public var title: String = "\(Self.self)"
+    public var reason: String = ""
+    public init() {}
+}
+
 @available(swift, introduced: 5)
 @available(OSX 10.13, *)
 @discardableResult
@@ -79,6 +85,9 @@ public func systemCommand(_ command: String, _ user: String? = nil, timeOutNanos
         result = output.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     if process.isRunning { try forceKillProcess(process) }
+    if process.terminationStatus > 0 {
+        throw SystemCommandExitError.mess(result)
+    }
 
     return result
 }
