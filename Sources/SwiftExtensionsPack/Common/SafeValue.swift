@@ -22,10 +22,10 @@ final public class SafeValue<Value>: @unchecked Sendable {
         _value = value
     }
     
-    public func change(_ callback: (inout Value) -> Void) {
+    public func change<T>(_ callback: (inout Value) -> T) -> T {
         lock.lock()
         defer { lock.unlock() }
-        callback(&_value)
+        return callback(&_value)
     }
 }
 
