@@ -8,5 +8,6 @@
 import Foundation
 
 public extension Data {
-    var getbBytes: [UInt8] { [UInt8](self) }
+    var getBytes: [UInt8] { [UInt8](self) }
+    var bytes: [UInt8] { getBytes }
 }
