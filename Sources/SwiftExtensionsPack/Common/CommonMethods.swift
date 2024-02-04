@@ -154,3 +154,17 @@ public func pp(_ line: Any...) {
     #endif
 }
 
+/// POW
+precedencegroup PowerPrecedence { higherThan: MultiplicationPrecedence }
+infix operator ** : PowerPrecedence
+public func ** (radix: Int, power: Int) -> Int {
+    return Int(pow(Double(radix), Double(power)))
+}
+
+public func ** (radix: Double, power: Double) -> Double {
+    return pow(radix, power)
+}
+
+
+
+
