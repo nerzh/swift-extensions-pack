@@ -54,7 +54,7 @@ public extension String {
     }
 
     func decryptAES256(key: Data) throws -> String {
-        let data: Data = try encryptAES256(key: key)
+        let data: Data = try decryptAES256(key: key)
         guard let text: String = String(data: data, encoding: .utf8) else {
             throw makeError(SEPCommonError.mess("Try to get text from decryptrd Data failed."))
         }
@@ -63,20 +63,19 @@ public extension String {
 
     /// Key will be converted to hex
     func encryptAES256(key: String, nonce: Data? = nil) throws -> String {
-        let convertedData: Data = try key.convertToAESKey()
-        let convertedNonce: AES.GCM.Nonce = nonce == nil ? .init() : try .init(data: Data(SHA256.hash(data: nonce!)))
-        return try encryptAES256(key: convertedData, nonce: convertedNonce)
+        let convertedKey: Data = try key.convertToAESKey()
+        let convertedNonce: AES.GCM.Nonce = nonce == nil ? .init() : try .init(data: Data(SHA256.hash(data: nonce!))[0..<12])
+        return try encryptAES256(key: convertedKey, nonce: convertedNonce)
     }
 
     /// Key will be converted to hex
     func decryptAES256(key: String) throws -> String {
-        let convertedData: Data = try key.convertToAESKey()
-        return try decryptAES256(key: convertedData)
+        let convertedKey: Data = try key.convertToAESKey()
+        return try decryptAES256(key: convertedKey)
     }
     
     func convertToAESKey() throws -> Data {
         let data: Data = Data(self.utf8)
-        let digest: SHA256Digest = SHA256.hash(data: data)
         return Data(SHA256.hash(data: data))
     }
     
