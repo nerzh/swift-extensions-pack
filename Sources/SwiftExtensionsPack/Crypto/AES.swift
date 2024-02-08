@@ -62,16 +62,16 @@ public extension String {
     }
 
     func encryptAES256(key: String, nonce: AES.GCM.Nonce = .init()) throws -> String {
-        let key: Data = try convertKey(by: key)
-        return try encryptAES256(key: key)
+        let key: Data = try convertAESKey(by: key)
+        return try encryptAES256(key: key, nonce: nonce)
     }
 
     func decryptAES256(key: String) throws -> String {
-        let key: Data = try convertKey(by: key)
+        let key: Data = try convertAESKey(by: key)
         return try decryptAES256(key: key)
     }
     
-    private func convertKey(by key: String) throws -> Data {
+    func convertAESKey(by key: String) throws -> Data {
         let data: Data = Data(key.utf8)
         let digest: SHA256Digest = SHA256.hash(data: data)
         return try digest.compactMap { String(format: "%02x", $0) }.joined().dataFromHexThrowing()
