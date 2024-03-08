@@ -15,7 +15,7 @@ var targetDependencies: [Target.Dependency] = [
 
 var platforms: [SupportedPlatform] = [
     .iOS(.v11),
-    .macOS(.v10_13)
+    .macOS(.v10_15)
 ]
 
 //#if (os(Linux) || os(macOS))
