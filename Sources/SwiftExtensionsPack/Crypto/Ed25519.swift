@@ -108,5 +108,15 @@ public extension SEPCrypto {
             
             return Data(buffer)
         }
+        
+        public class func verify(signature: Data, message: Data, len: Int, publicKey: Data) -> Bool {
+            var message: [UInt8] = message.bytes
+            var publicKey: [UInt8] = publicKey.bytes
+            var signature: [UInt8] = signature.bytes
+            
+            let int: Int32 = ed25519_verify(&signature, &message, len, &publicKey)
+            
+            return int == 1
+        }
     }
 }
