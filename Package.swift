@@ -6,7 +6,7 @@ let name: String = "SwiftExtensionsPack"
 var packageDependencies: [Package.Dependency] = [
     .package(url: "https://github.com/nerzh/swift-regular-expression.git", .upToNextMajor(from: "0.2.4")),
     .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "2.0.0")),
-    .package(url: "https://github.com/bytehubio/ed25519", branch: "master"),
+    .package(url: "https://github.com/bytehubio/ed25519", .upToNextMajor(from: "1.0.0")),
 ]
 
 var targetDependencies: [Target.Dependency] = [
