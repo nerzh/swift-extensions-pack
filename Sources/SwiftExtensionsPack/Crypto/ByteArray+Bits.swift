@@ -10,9 +10,12 @@ import Foundation
 public protocol ToBytesConvertable: FixedWidthInteger {
     func toBytes(endian: Endianness) -> [UInt8]
     func toBytes(endian: Endianness, count: Int) -> [UInt8]
-    func toBits(endian: Endianness) -> String
     init(_ bytes: [UInt8])
     init(_ bytes: [UInt8], endian: Endianness)
+}
+
+public protocol ToBitsConvertable: FixedWidthInteger {
+    func toBits(endian: Endianness) -> String
 }
 
 
@@ -20,7 +23,6 @@ public enum Endianness {
     case bigEndian
     case littleEndian
 }
-
 
 public extension ToBytesConvertable {
     init(_ bytes: [UInt8]) {
@@ -55,7 +57,9 @@ public extension ToBytesConvertable {
             }
         }
     }
-    
+}
+
+public extension ToBitsConvertable {
     func toBits(endian: Endianness = .littleEndian) -> String {
         var integer: Self
         switch endian {
@@ -68,15 +72,17 @@ public extension ToBytesConvertable {
 }
 
 
-extension UInt16: ToBytesConvertable {}
-extension UInt32: ToBytesConvertable {}
-extension UInt64: ToBytesConvertable {}
-extension UInt: ToBytesConvertable {}
+extension UInt8: ToBitsConvertable {}
+extension UInt16: ToBytesConvertable & ToBitsConvertable {}
+extension UInt32: ToBytesConvertable & ToBitsConvertable {}
+extension UInt64: ToBytesConvertable & ToBitsConvertable {}
+extension UInt: ToBytesConvertable & ToBitsConvertable {}
 
 
-extension Int16: ToBytesConvertable {}
-extension Int32: ToBytesConvertable {}
-extension Int64: ToBytesConvertable {}
-extension Int: ToBytesConvertable {}
+extension Int8: ToBitsConvertable {}
+extension Int16: ToBytesConvertable & ToBitsConvertable {}
+extension Int32: ToBytesConvertable & ToBitsConvertable {}
+extension Int64: ToBytesConvertable & ToBitsConvertable {}
+extension Int: ToBytesConvertable & ToBitsConvertable {}
 
 
