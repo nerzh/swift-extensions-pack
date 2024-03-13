@@ -18,7 +18,7 @@ public extension SEPCrypto {
         case sha384
         case sha512
         
-        func digest(data: Data) -> any Digest {
+        public func digest(data: Data) -> any Digest {
             switch self {
             case .sha256:
                 SHA256.hash(data: data)
