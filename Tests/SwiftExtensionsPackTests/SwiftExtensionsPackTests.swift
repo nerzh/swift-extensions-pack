@@ -16,4 +16,16 @@ final class swift_extensions_packTests: XCTestCase {
         let publicKey = SEPCrypto.Ed25519.createPublicKey(secretKey: pair.secret)
         XCTAssertEqual(publicKey.toHexadecimal, "48075a597e721a156e2e0799de5cc0c5324dc6e7eaf1cdd46250868ec53215dd")
     }
+    
+    func testRandom() async throws {
+        for _ in 0...100000 {
+            let num1 = randomNumber(min: 3, max: 4)
+            XCTAssertTrue(num1 >= 3)
+            XCTAssertTrue(num1 <= 4)
+            
+            let num2 = randomNumber(min: 0, max: UInt.max)
+            XCTAssertTrue(num2 >= 0)
+            XCTAssertTrue(num2 <= UInt.max - 1)
+        }
+    }
 }
