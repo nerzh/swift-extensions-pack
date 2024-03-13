@@ -10,6 +10,7 @@ import Foundation
 public protocol ToBytesConvertable: FixedWidthInteger {
     func toBytes(endian: Endianness) -> [UInt8]
     func toBytes(endian: Endianness, count: Int) -> [UInt8]
+    func toBits(endian: Endianness) -> String
     init(_ bytes: [UInt8])
     init(_ bytes: [UInt8], endian: Endianness)
 }
@@ -22,12 +23,26 @@ public enum Endianness {
 
 
 public extension ToBytesConvertable {
-    func toBytes(endian: Endianness) -> [UInt8] {
+    init(_ bytes: [UInt8]) {
+        self = Self.init(bytes, endian: .littleEndian)
+    }
+    
+    init(_ bytes: [UInt8], endian: Endianness) {
+        var bytes: [UInt8] = bytes
+        if endian == .bigEndian {
+            bytes = bytes.reversed()
+        }
+        let data: Data = .init(bytes)
+        let number = data.withUnsafeBytes { $0.load(as: Self.self) }
+        self = number
+    }
+    
+    func toBytes(endian: Endianness = .littleEndian) -> [UInt8] {
         let count: Int = MemoryLayout<Self>.size
         return toBytes(endian: endian, count: count)
     }
     
-    func toBytes(endian: Endianness, count: Int) -> [UInt8] {
+    func toBytes(endian: Endianness = .littleEndian, count: Int) -> [UInt8] {
         var integer: Self
         switch endian {
         case .bigEndian: integer = self.bigEndian
@@ -41,18 +56,14 @@ public extension ToBytesConvertable {
         }
     }
     
-    init(_ bytes: [UInt8]) {
-        self = Self.init(bytes, endian: .littleEndian)
-    }
-    
-    init(_ bytes: [UInt8], endian: Endianness) {
-        var bytes: [UInt8] = bytes
-        if endian == .bigEndian {
-            bytes = bytes.reversed()
+    func toBits(endian: Endianness = .littleEndian) -> String {
+        var integer: Self
+        switch endian {
+        case .bigEndian: integer = self.bigEndian
+        case .littleEndian: integer = self.littleEndian
         }
-        let data: Data = .init(bytes)
-        let number = data.withUnsafeBytes { $0.load(as: Self.self) }
-        self = number
+        
+        return String(integer, radix: 2)
     }
 }
 
