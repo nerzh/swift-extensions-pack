@@ -16,7 +16,7 @@ var targetDependencies: [Target.Dependency] = [
 ]
 
 var platforms: [SupportedPlatform] = [
-    .iOS(.v11),
+    .iOS(.v13),
     .macOS(.v10_15)
 ]
 
