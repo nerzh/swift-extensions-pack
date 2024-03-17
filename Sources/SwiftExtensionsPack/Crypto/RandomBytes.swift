@@ -12,6 +12,15 @@ public func randomBytes(count: UInt) -> [UInt8] {
     return (0..<count).map({ _ in UInt8.random(in: 0...UInt8.max, using: &generator) })
 }
 
+public func randomData(count: Int) -> Data {
+    var generator = SystemRandomNumberGenerator()
+    var data: Data = .init(count: count)
+    for index in 0..<count {
+        data[index] = UInt8.random(in: 0...UInt8.max, using: &generator)
+    }
+    return data
+}
+
 public func randomUInt(min: UInt, max: UInt) -> UInt {
     var generator = SystemRandomNumberGenerator()
     return UInt.random(in: min...max, using: &generator)
