@@ -21,7 +21,8 @@ final public class SafeValue<Value>: @unchecked Sendable {
     public init(_ value: Value) {
         _value = value
     }
-    
+
+    @discardableResult
     public func change<T>(_ callback: (inout Value) -> T) -> T {
         lock.lock()
         defer { lock.unlock() }
