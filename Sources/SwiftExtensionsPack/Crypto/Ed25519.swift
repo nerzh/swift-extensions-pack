@@ -46,15 +46,15 @@ public extension SEPCrypto {
             return (public: keys.public.toHexadecimal, secret: keys.secret.toHexadecimal)
         }
         
-        public class func sign(message: Data, len: Int, publicKey: Data, secretKey: Data) -> Data {
-            let signaturePtr = UnsafeMutablePointer<UInt8>.allocate(capacity: 32)
+        public class func sign(message: Data, publicKey32byte: Data, secretKey64byte: Data) -> Data {
+            let signaturePtr = UnsafeMutablePointer<UInt8>.allocate(capacity: 64)
             var message: [UInt8] = message.bytes
-            var publicKey: [UInt8] = publicKey.bytes
-            var secretKey: [UInt8] = secretKey.bytes
+            var publicKey: [UInt8] = publicKey32byte.bytes
+            var secretKey: [UInt8] = secretKey64byte.bytes
             
-            ed25519_sign(signaturePtr, &message, len, &publicKey, &secretKey)
+            ed25519_sign(signaturePtr, &message, message.count, &publicKey, &secretKey)
             
-            let signature = UnsafeMutableBufferPointer<UInt8>.init(start: signaturePtr, count: 32)
+            let signature = UnsafeMutableBufferPointer<UInt8>.init(start: signaturePtr, count: 64)
             defer {
                 signature.deinitialize()
                 signature.deallocate()
