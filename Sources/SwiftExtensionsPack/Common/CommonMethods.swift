@@ -165,6 +165,8 @@ public func ** (radix: Double, power: Double) -> Double {
     return pow(radix, power)
 }
 
-
-
-
+public func getTimestampMs() -> UInt64 {
+    var time: timeval = .init()
+    gettimeofday(&time, nil)
+    return (UInt64(time.tv_sec) * 1000) + (UInt64(time.tv_usec) / 1000)
+}
