@@ -24,27 +24,27 @@ extension Date {
         return dateWithTimeZone(dateFormatter, secondsFromGMT: secondsFromGMT)
     }
     
-    public func day(secondsFromGMT: Int?=nil) -> UInt? {
+    public func getDay(secondsFromGMT: Int?=nil) -> UInt? {
         return UInt(toString(dateFormat: "dd", secondsFromGMT: secondsFromGMT))
     }
     
-    public func month(secondsFromGMT: Int?=nil) -> UInt? {
+    public func getMonth(secondsFromGMT: Int?=nil) -> UInt? {
         return UInt(toString(dateFormat: "MM", secondsFromGMT: secondsFromGMT))
     }
     
-    public func year(secondsFromGMT: Int?=nil) -> UInt? {
+    public func getYear(secondsFromGMT: Int?=nil) -> UInt? {
         return UInt(toString(dateFormat: "yyyy", secondsFromGMT: secondsFromGMT))
     }
     
-    public func hours(secondsFromGMT: Int?=nil) -> UInt? {
+    public func getHours(secondsFromGMT: Int?=nil) -> UInt? {
         return UInt(toString(dateFormat: "HH", secondsFromGMT: secondsFromGMT))
     }
     
-    public func minutes(secondsFromGMT: Int?=nil) -> UInt? {
+    public func getMinutes(secondsFromGMT: Int?=nil) -> UInt? {
         return UInt(toString(dateFormat: "mm", secondsFromGMT: secondsFromGMT))
     }
     
-    public func seconds(secondsFromGMT: Int?=nil) -> UInt? {
+    public func getSeconds(secondsFromGMT: Int?=nil) -> UInt? {
         return UInt(toString(dateFormat: "ss", secondsFromGMT: secondsFromGMT))
     }
 
@@ -56,3 +56,5 @@ extension Date {
         return UInt(self.timeIntervalSince1970)
     }
 }
+
+
