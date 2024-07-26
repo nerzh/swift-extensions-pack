@@ -34,7 +34,7 @@ public extension ErrorCommon {
     
     init(_ reason: String, file: String = #file, function: String = #function, line: Int = #line) {
         self.init()
-        self.reason = "\(file) \(function) \(line): \(reason)"
+        self.reason = "\(file), \(function), line \(line): \(reason)"
     }
     
     init(_ error: Error, errorLevel: ErrorCommonLevel = .debug, file: String = #file, function: String = #function, line: Int = #line) {
