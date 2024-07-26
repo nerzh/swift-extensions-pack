@@ -86,7 +86,7 @@ public func systemCommand(_ command: String, _ user: String? = nil, timeOutNanos
     }
     if process.isRunning { try forceKillProcess(process) }
     if process.terminationStatus > 0 {
-        throw SystemCommandExitError.mess(result)
+        throw SystemCommandExitError(result)
     }
 
     return result

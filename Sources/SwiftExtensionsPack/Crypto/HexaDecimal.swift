@@ -60,7 +60,7 @@ public extension String {
         } else if self.isBase64() {
             return Data(base64Encoded: self)!
         } else {
-            throw SEPCommonError.mess("\(self) undefined Data String format")
+            throw SEPCommonError("\(self) undefined Data String format")
         }
     }
 }
