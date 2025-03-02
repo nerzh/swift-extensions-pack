@@ -17,6 +17,8 @@ public protocol ErrorCommon: Error, LocalizedError, CustomStringConvertible, Cus
     init(_ error: Error, logLevel: Logger.Level, file: String, function: String, line: Int)
     init(_ error: Error, exReason: String, errorLevel: ErrorCommonLevel, file: String, function: String, line: Int)
     init(_ error: Error, exReason: String, logLevel: Logger.Level, file: String, function: String, line: Int)
+    
+    static func error(_ error: Error) -> Self
 }
 
 public enum ErrorCommonLevel: Cases {
@@ -53,6 +55,10 @@ public extension ErrorCommon {
     init(_ error: Error, exReason: String, logLevel: Logger.Level = .debug, file: String = #file, function: String = #function, line: Int = #line) {
         let textError: String = "[\(exReason)] \(Self.getDetailedErrorMessage(error, logLevel: logLevel))"
         self.init(textError, file: file, function: function, line: line)
+    }
+    
+    static func error(_ error: Error) -> Self {
+        Self(error, errorLevel: .debug)
     }
     
     private static func getDetailedErrorMessage(_ error: Error, logLevel: Logger.Level = .debug) -> String {
