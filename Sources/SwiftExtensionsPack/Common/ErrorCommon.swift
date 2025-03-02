@@ -86,18 +86,18 @@ public extension ErrorCommon {
         if isCustomStringConvertibleError && isCustomDebugStringConvertibleError {
             switch errorLevel {
             case .release:
-                return (error as! CustomStringConvertible).description
+                return (error as CustomStringConvertible).description
             case .debug:
-                return (error as! CustomDebugStringConvertible).debugDescription
+                return (error as CustomDebugStringConvertible).debugDescription
             }
         }
         
         if isCustomStringConvertibleError {
-            return (error as! CustomStringConvertible).description
+            return (error as CustomStringConvertible).description
         }
         
         if isCustomDebugStringConvertibleError {
-            return (error as! CustomDebugStringConvertible).debugDescription
+            return (error as CustomDebugStringConvertible).debugDescription
         }
         
         return String(reflecting: error)

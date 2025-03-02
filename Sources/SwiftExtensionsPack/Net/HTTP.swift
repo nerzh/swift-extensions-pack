@@ -135,7 +135,7 @@ extension Dictionary {
 
 
 //  MARK: Net
-public class Net {
+public final class Net {
     private static let sessionConfiguration : URLSessionConfiguration = {
         let config = URLSessionConfiguration.default
         config.requestCachePolicy = .reloadIgnoringLocalCacheData
@@ -145,7 +145,7 @@ public class Net {
         return config
     }()
     
-    public static var sharedSession = URLSession(configuration: sessionConfiguration)
+    public static let sharedSession = URLSession(configuration: sessionConfiguration)
     
     public enum NetErrors : Error {
         case NotValidParams
@@ -162,7 +162,7 @@ public class Net {
                                   session: URLSession? = nil,
                                   beforeResume: (() -> Void)? = {},
                                   afterResume: (() -> Void)? = {},
-                                  _ handler: @escaping (Data?, URLResponse?, Error?) throws -> () = { _,_,_ in }) throws
+                                  _ handler: @escaping @Sendable (Data?, URLResponse?, Error?) throws -> () = { _,_,_ in }) throws
     {
         let request = try makeRequest(url: url, method: method, headers: headers, params: params, body: body, multipart: multipart)
         
