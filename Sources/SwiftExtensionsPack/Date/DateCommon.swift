@@ -55,6 +55,11 @@ extension Date {
     public func toSeconds() -> UInt {
         return UInt(self.timeIntervalSince1970)
     }
+    
+    func startOfMonthDate() -> Date {
+        let calendar = Calendar.current
+        return calendar.date(from: calendar.dateComponents([.year, .month], from: self))!
+    }
 }
 
 

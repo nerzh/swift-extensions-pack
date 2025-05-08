@@ -7,9 +7,9 @@
 
 import Foundation
 
-extension Date {
+public extension Date {
 
-    public func toString(_ dateFormatter: DateFormatter, secondsFromGMT: Int?=nil) -> String {
+    func toString(_ dateFormatter: DateFormatter, secondsFromGMT: Int?=nil) -> String {
         if let secondsFromGMT = secondsFromGMT {
             dateFormatter.timeZone = TimeZone(secondsFromGMT: secondsFromGMT)
         } else {
@@ -19,20 +19,20 @@ extension Date {
         return dateFormatter.string(from: self)
     }
 
-    public func toString(dateFormat: String="dd-MM-yyyy HH:mm:ss", secondsFromGMT: Int?=nil) -> String {
+    func toString(dateFormat: String="dd-MM-yyyy HH:mm:ss", secondsFromGMT: Int?=nil) -> String {
         let dateFormatter        = DateFormatter()
         dateFormatter.dateFormat = dateFormat
 
         return toString(dateFormatter, secondsFromGMT: secondsFromGMT)
     }
 
-    public func stringWithTimeZone(_ dateFormatter: DateFormatter, secondsFromGMT: Int) -> String {
+    func stringWithTimeZone(_ dateFormatter: DateFormatter, secondsFromGMT: Int) -> String {
         dateFormatter.timeZone   = TimeZone(secondsFromGMT: secondsFromGMT)
 
         return dateFormatter.string(from: self)
     }
 
-    public func stringWithTimeZone(dateFormat: String="dd-MM-yyyy HH:mm:ss", secondsFromGMT: Int) -> String {
+    func stringWithTimeZone(dateFormat: String="dd-MM-yyyy HH:mm:ss", secondsFromGMT: Int) -> String {
         let dateFormatter        = DateFormatter()
         dateFormatter.dateFormat = dateFormat
 
