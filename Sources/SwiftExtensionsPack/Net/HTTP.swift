@@ -207,7 +207,7 @@ public final class Net {
                     } else if let error = e {
                         continuation.resume(throwing: error)
                     } else {
-                        continuation.resume(throwing: makeError(SEPCommonError("No result from Net 🤔")))
+                        continuation.resume(throwing: SEPCommonError("No result from Net 🤔"))
                     }
                 }
             } catch {

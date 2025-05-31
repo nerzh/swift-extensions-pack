@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Logging
 
 public protocol ErrorCommon: Error, LocalizedError, CustomStringConvertible, CustomDebugStringConvertible, Decodable {
     var reason: String { get set }
@@ -14,9 +13,7 @@ public protocol ErrorCommon: Error, LocalizedError, CustomStringConvertible, Cus
     init()
     init(_ reason: String, file: String, function: String, line: Int)
     init(_ error: Error, errorLevel: ErrorCommonLevel, file: String, function: String, line: Int)
-    init(_ error: Error, logLevel: Logger.Level, file: String, function: String, line: Int)
     init(_ error: Error, exReason: String, errorLevel: ErrorCommonLevel, file: String, function: String, line: Int)
-    init(_ error: Error, exReason: String, logLevel: Logger.Level, file: String, function: String, line: Int)
     
     static func error(_ error: Error, file: String, function: String, line: Int) -> Self
 }
@@ -33,6 +30,8 @@ public extension ErrorCommon {
     var failureReason: String? { self.description }
     var recoverySuggestion: String? { self.description }
     var helpAnchor: String? { self.description }
+    #warning("if localizedDescription not defined we have sigterm for linux")
+    var localizedDescription: String { self.description }
     
     init(_ reason: String, file: String = #file, function: String = #function, line: Int = #line) {
         self.init()
@@ -43,31 +42,13 @@ public extension ErrorCommon {
         self.init(Self.getDetailedErrorMessage(error, errorLevel: errorLevel), file: file, function: function, line: line)
     }
     
-    init(_ error: Error, logLevel: Logger.Level = .debug, file: String = #file, function: String = #function, line: Int = #line) {
-        self.init(Self.getDetailedErrorMessage(error, logLevel: logLevel), file: file, function: function, line: line)
-    }
-    
     init(_ error: Error, exReason: String, errorLevel: ErrorCommonLevel = .debug, file: String = #file, function: String = #function, line: Int = #line) {
         let textError: String = "[\(exReason)] \(Self.getDetailedErrorMessage(error, errorLevel: errorLevel))"
         self.init(textError, file: file, function: function, line: line)
     }
     
-    init(_ error: Error, exReason: String, logLevel: Logger.Level = .debug, file: String = #file, function: String = #function, line: Int = #line) {
-        let textError: String = "[\(exReason)] \(Self.getDetailedErrorMessage(error, logLevel: logLevel))"
-        self.init(textError, file: file, function: function, line: line)
-    }
-    
     static func error(_ error: Error, file: String = #file, function: String = #function, line: Int = #line) -> Self {
         Self(error, errorLevel: .debug, file: file, function: function, line: line)
-    }
-    
-    private static func getDetailedErrorMessage(_ error: Error, logLevel: Logger.Level = .debug) -> String {
-        switch logLevel {
-        case .trace, .debug:
-            return getDetailedErrorMessage(error, errorLevel: .debug)
-        default:
-            return getDetailedErrorMessage(error, errorLevel: .release)
-        }
     }
     
     private static func getDetailedErrorMessage(_ error: Error, errorLevel: ErrorCommonLevel = .debug) -> String {
@@ -108,10 +89,6 @@ public extension ErrorCommon {
         
         return String(reflecting: error)
     }
-}
-
-public func makeError<T: ErrorCommon>(_ error: T, _ file: String = #file, _ funcName: String = #function, _ line: Int = #line) -> T {
-    return T(error, errorLevel: .debug, file: file, function: funcName, line: line)
 }
 
 public struct SEPCommonError: ErrorCommon {

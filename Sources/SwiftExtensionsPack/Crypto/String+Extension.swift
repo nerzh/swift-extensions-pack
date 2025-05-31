@@ -14,7 +14,7 @@ public extension String {
     
     func dataFromHexThrowing() throws -> Data {
         guard let data = Data(hexString: self) else {
-            throw makeError(SEPCommonError("Try get Data from hexString failed. Please, only hex format !"))
+            throw SEPCommonError("Try get Data from hexString failed. Please, only hex format !")
         }
         return data
     }

@@ -37,14 +37,14 @@ public extension String {
 
     func encryptAES256(key: Data, nonce: AES.GCM.Nonce = .init()) throws -> Data {
         guard let data: Data = self.data(using: .utf8) else {
-            throw makeError(SEPCommonError("Failed to get Data from text"))
+            throw SEPCommonError("Failed to get Data from text")
         }
         return try SEPCrypto.encryptAES256GCM(data: data, key: key, nonce: nonce)
     }
 
     func decryptAES256(key: Data) throws -> Data {
         guard let hexData: Data = self.dataFromHex else {
-            throw makeError(SEPCommonError("Try to get Data from hexString failed. Pleasw, only hex format !"))
+            throw SEPCommonError("Try to get Data from hexString failed. Pleasw, only hex format !")
         }
         return try SEPCrypto.decryptAES256GCM(data: hexData, key: key)
     }
@@ -56,7 +56,7 @@ public extension String {
     func decryptAES256(key: Data) throws -> String {
         let data: Data = try decryptAES256(key: key)
         guard let text: String = String(data: data, encoding: .utf8) else {
-            throw makeError(SEPCommonError("Try to get text from decryptrd Data failed."))
+            throw SEPCommonError("Try to get text from decryptrd Data failed.")
         }
         return text
     }
