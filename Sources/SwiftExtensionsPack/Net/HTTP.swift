@@ -6,8 +6,9 @@
 //
 
 import Foundation
+
 #if canImport(FoundationNetworking)
-import FoundationNetworking
+    import FoundationNetworking
 #endif
 
 public protocol NetSessionFilePrtcl {
@@ -33,9 +34,14 @@ public struct NetSessionFile: NetSessionFilePrtcl {
 
 // MARK: Extension NSMutableData
 extension NSMutableData {
-    
+
     func appendString(_ string: String) {
-        guard let data = string.data(using: String.Encoding.utf8, allowLossyConversion: false) else {
+        guard
+            let data = string.data(
+                using: String.Encoding.utf8,
+                allowLossyConversion: false
+            )
+        else {
             fatalError("Can Not Convert String: \(string) to Data")
         }
         append(data)
@@ -44,53 +50,62 @@ extension NSMutableData {
 
 // MARK: Multipart
 public class NetMultipartData {
-    public var body            : NSMutableData = NSMutableData()
-    private var _boundary      : String        = ""
-    private var boundaryPrefix : String        = ""
-    private var finishBoundary : String        = ""
-    public var boundary : String {
+    public var body: NSMutableData = NSMutableData()
+    private var _boundary: String = ""
+    private var boundaryPrefix: String = ""
+    private var finishBoundary: String = ""
+    public var boundary: String {
         set {
-            _boundary      = newValue
+            _boundary = newValue
             boundaryPrefix = "--\(newValue)\r\n"
             finishBoundary = "--\(self.boundary)--"
         }
         get { return _boundary }
     }
-    
+
     public init() {
         boundary = "Boundary-\(UUID().uuidString)"
     }
-    
+
     public init(boundary: String) {
         self.boundary = boundary
     }
-    
+
     public func append(_ name: String, _ value: Any) {
         body.appendString(boundaryPrefix)
-        body.appendString("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n")
+        body.appendString(
+            "Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n"
+        )
         body.appendString("\(value)\r\n")
     }
-    
-    public func appendFile(_ name: String, _ data: Data, _ fileName: String, mimeType: String) {
+
+    public func appendFile(
+        _ name: String,
+        _ data: Data,
+        _ fileName: String,
+        mimeType: String
+    ) {
         body.appendString(boundaryPrefix)
-        body.appendString("Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(fileName)\"\r\n")
+        body.appendString(
+            "Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(fileName)\"\r\n"
+        )
         body.appendString("Content-Type: \(mimeType)\r\n\r\n")
         body.append(data)
         body.appendString("\r\n")
     }
-    
+
     public func finalizeBodyAndGetData() -> NSMutableData {
         finalizeBody()
         return body
     }
-    
+
     private func finalizeBody() {
         body.appendString(finishBoundary)
     }
 
     public func toRailsMultipartData(_ anyObject: Any) -> NSMutableData {
         func checkValue(_ parentName: String, _ anyObject: Any) {
-            if let array = anyObject as? Array<Any> {
+            if let array = anyObject as? [Any] {
                 for (index, element) in array.enumerated() {
                     var newNodeName: String = .init()
                     if isNumeric(element) || element is String {
@@ -100,14 +115,21 @@ public class NetMultipartData {
                     }
                     checkValue(newNodeName, element)
                 }
-            } else if let dictionary = anyObject as? Dictionary<String, Any> {
+            } else if let dictionary = anyObject as? [String: Any] {
                 for key in dictionary.keys {
-                    let newNodeName = parentName.count == 0 ? "\(key)" : "\(parentName)[\(key)]"
+                    let newNodeName =
+                        parentName.count == 0
+                        ? "\(key)" : "\(parentName)[\(key)]"
                     checkValue(newNodeName, dictionary[key]!)
                 }
             } else {
                 if let file = anyObject as? NetSessionFilePrtcl {
-                    appendFile(parentName, file.data, file.fileName, mimeType: file.mimeType)
+                    appendFile(
+                        parentName,
+                        file.data,
+                        file.fileName,
+                        mimeType: file.mimeType
+                    )
                 } else {
                     append(parentName, anyObject)
                 }
@@ -121,22 +143,20 @@ public class NetMultipartData {
 
 // MARK: Extension Dictionary to Multipart (Recursive)
 extension Dictionary {
-    
+
     func toRailsMultipartData() -> NSMutableData {
         return NetMultipartData().toRailsMultipartData(self)
     }
-    
+
     //    MARK: Ruby On Rails
     func toRailsQueryParams() -> String {
         return Net.toRailsQueryParams(self)
     }
 }
 
-
-
 //  MARK: Net
 public final class Net {
-    private static let sessionConfiguration : URLSessionConfiguration = {
+    private static let sessionConfiguration: URLSessionConfiguration = {
         let config = URLSessionConfiguration.default
         config.requestCachePolicy = .reloadIgnoringLocalCacheData
         config.urlCache = nil
@@ -144,70 +164,90 @@ public final class Net {
         //        config.timeoutIntervalForResource = 0
         return config
     }()
-    
-    public static let sharedSession = URLSession(configuration: sessionConfiguration)
-    
-    public enum NetErrors : Error {
+
+    public static let sharedSession = URLSession(
+        configuration: sessionConfiguration
+    )
+
+    public enum NetErrors: Error {
         case NotValidParams
         case SomeError
         case BadData
     }
 
-    public class func sendRequest(url: String,
-                                  method: String,
-                                  headers: [String:String]? = nil,
-                                  params: [String:Any]? = nil,
-                                  body: Data? = nil,
-                                  multipart: Bool = false,
-                                  session: URLSession? = nil,
-                                  beforeResume: (() -> Void)? = {},
-                                  afterResume: (() -> Void)? = {},
-                                  _ handler: @escaping @Sendable (Data?, URLResponse?, Error?) throws -> () = { _,_,_ in }) throws
-    {
-        let request = try makeRequest(url: url, method: method, headers: headers, params: params, body: body, multipart: multipart)
-        
-        let dataTask = (session ?? sharedSession).dataTask(with: request, completionHandler: { (data, response, error) -> Void in
-            do {
-                try handler(data, response, error)
-            } catch {
-                try? handler(nil, nil, error)
+    public class func sendRequest(
+        url: String,
+        method: String,
+        headers: [String: String]? = nil,
+        params: [String: Any]? = nil,
+        body: Data? = nil,
+        multipart: Bool = false,
+        session: URLSession? = nil,
+        beforeResume: (() -> Void)? = {},
+        afterResume: (() -> Void)? = {},
+        _ handler: @escaping @Sendable (Data?, URLResponse?, Error?) throws ->
+            Void = { _, _, _ in }
+    ) throws {
+        let request = try makeRequest(
+            url: url,
+            method: method,
+            headers: headers,
+            params: params,
+            body: body,
+            multipart: multipart
+        )
+
+        let dataTask = (session ?? sharedSession).dataTask(
+            with: request,
+            completionHandler: { (data, response, error) -> Void in
+                do {
+                    try handler(data, response, error)
+                } catch {
+                    try? handler(nil, nil, error)
+                }
             }
-        })
-        
+        )
+
         if let beforeResume = beforeResume { beforeResume() }
         dataTask.resume()
         if let afterResume = afterResume { afterResume() }
         // sharedSession.finishTasksAndInvalidate()
     }
-    
+
     @available(iOS 13, *)
     @available(macOS 12, *)
-    public class func sendRequest(url: String,
-                                  method: String,
-                                  headers: [String:String]? = nil,
-                                  params: [String:Any]? = nil,
-                                  body: Data? = nil,
-                                  multipart: Bool = false,
-                                  session: URLSession? = nil
+    public class func sendRequest(
+        url: String,
+        method: String,
+        headers: [String: String]? = nil,
+        params: [String: Any]? = nil,
+        body: Data? = nil,
+        multipart: Bool = false,
+        session: URLSession? = nil
     ) async throws -> (data: Data, response: URLResponse) {
         return try await withCheckedThrowingContinuation { continuation in
             do {
-                try sendRequest(url: url,
-                                method: method,
-                                headers: headers,
-                                params: params,
-                                body: body,
-                                multipart: multipart,
-                                session: session,
-                                beforeResume: nil,
-                                afterResume: nil
+                try sendRequest(
+                    url: url,
+                    method: method,
+                    headers: headers,
+                    params: params,
+                    body: body,
+                    multipart: multipart,
+                    session: session,
+                    beforeResume: nil,
+                    afterResume: nil
                 ) { d, r, e in
                     if let data = d, let response = r {
-                        continuation.resume(returning: (data: data, response: response))
+                        continuation.resume(
+                            returning: (data: data, response: response)
+                        )
                     } else if let error = e {
                         continuation.resume(throwing: error)
                     } else {
-                        continuation.resume(throwing: SEPCommonError("No result from Net 🤔"))
+                        continuation.resume(
+                            throwing: SEPCommonError("No result from Net 🤔")
+                        )
                     }
                 }
             } catch {
@@ -215,22 +255,29 @@ public final class Net {
             }
         }
     }
-    
-    private class func makeRequest(url: String,
-                                   method: String,
-                                   headers: [String: String]? = nil,
-                                   params: [String: Any]? = nil,
-                                   body: Data? = nil,
-                                   multipart: Bool = false) throws -> URLRequest
-    {
+
+    private class func makeRequest(
+        url: String,
+        method: String,
+        headers: [String: String]? = nil,
+        params: [String: Any]? = nil,
+        body: Data? = nil,
+        multipart: Bool = false
+    ) throws -> URLRequest {
         let fullUrl = multipart ? url : "\(url)\(makeQueryParamsString(params))"
-        guard let requestUrl = URL(string: fullUrl) else { throw NetErrors.NotValidParams }
-        var request                 = URLRequest(url: requestUrl)
-        request.httpMethod          = method
+        guard let requestUrl = URL(string: fullUrl) else {
+            throw NetErrors.NotValidParams
+        }
+        var request = URLRequest(url: requestUrl)
+        request.httpMethod = method
         request.allHTTPHeaderFields = headers
-        
-        if method.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == "get" { return request }
-        
+
+        if method.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+            == "get"
+        {
+            return request
+        }
+
         if multipart {
             request.setMultipartBody(from: params)
         } else if let body = body {
@@ -241,29 +288,32 @@ public final class Net {
 
         return request
     }
-    
-    public class func makeQueryParamsString(_ params: [String: Any]?) -> String {
+
+    public class func makeQueryParamsString(_ params: [String: Any]?) -> String
+    {
         guard let params = params else { return "" }
         var queryParamsString = params.count > 0 ? "?" : ""
         queryParamsString.append(paramsString(params))
-        
+
         return queryParamsString
     }
-    
+
     public class func paramsString(_ params: [String: Any]?) -> String {
         toRailsQueryParams(params)
     }
-    
+
     public class func urlEncode(_ string: String) -> String {
         var allowedCharacters = CharacterSet.alphanumerics
         allowedCharacters.insert(charactersIn: ".-_")
-        return string.addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? ""
+        return string.addingPercentEncoding(
+            withAllowedCharacters: allowedCharacters
+        ) ?? ""
     }
 
-    public class func toQueryParams(_ params: [String:Any]?) -> String {
-        var paramsString          = ""
-        var first                 = true
-        let separator : Character = "&"
+    public class func toQueryParams(_ params: [String: Any]?) -> String {
+        var paramsString = ""
+        var first = true
+        let separator: Character = "&"
         guard let params = params else { return paramsString }
 
         for (key, value) in params {
@@ -279,8 +329,12 @@ public final class Net {
     }
 
     public class func toRailsQueryParams(_ anyObject: Any?) -> String {
-        func checkValue(_ parentName: String, _ anyObject: AnyObject, _ queryParams: inout String) {
-            if let array = anyObject as? Array<AnyObject> {
+        func checkValue(
+            _ parentName: String,
+            _ anyObject: AnyObject,
+            _ queryParams: inout String
+        ) {
+            if let array = anyObject as? [AnyObject] {
                 for (index, element) in array.enumerated() {
                     var newNodeName: String = .init()
                     if isNumeric(element) || element is String {
@@ -290,14 +344,18 @@ public final class Net {
                     }
                     checkValue(newNodeName, element, &queryParams)
                 }
-            } else if let dictionary = anyObject as? Dictionary<String,AnyObject> {
+            } else if let dictionary = anyObject as? [String: AnyObject] {
                 for key in dictionary.keys {
-                    let newNodeName = parentName.count == 0 ? "\(key)" : "\(parentName)[\(key)]"
+                    let newNodeName =
+                        parentName.count == 0
+                        ? "\(key)" : "\(parentName)[\(key)]"
                     checkValue(newNodeName, dictionary[key]!, &queryParams)
                 }
             } else {
                 let value = urlEncode("\(anyObject)")
-                let pair = queryParams.count == 0 ? "\(parentName)=\(value)" : "&\(parentName)=\(value)"
+                let pair =
+                    queryParams.count == 0
+                    ? "\(parentName)=\(value)" : "&\(parentName)=\(value)"
                 queryParams.append(pair)
             }
         }
@@ -309,18 +367,22 @@ public final class Net {
     }
 }
 
-
 extension URLRequest {
 
-    mutating func setMultipartBody(from params: [String:Any]?) {
+    mutating func setMultipartBody(from params: [String: Any]?) {
         let body = NetMultipartData()
-        self.setValue("multipart/form-data; boundary=\(body.boundary)", forHTTPHeaderField: "Content-Type")
+        self.setValue(
+            "multipart/form-data; boundary=\(body.boundary)",
+            forHTTPHeaderField: "Content-Type"
+        )
         self.addValue("application/json", forHTTPHeaderField: "Accept")
 
         self.httpBody = body.toRailsMultipartData(params ?? [:]) as Data
     }
 
-    mutating func setBody(from params: [String:Any]?) {
-        self.httpBody = Net.paramsString(params).data(using: String.Encoding.utf8)
+    mutating func setBody(from params: [String: Any]?) {
+        self.httpBody = Net.paramsString(params).data(
+            using: String.Encoding.utf8
+        )
     }
 }

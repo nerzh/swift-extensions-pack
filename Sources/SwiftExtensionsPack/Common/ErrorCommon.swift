@@ -30,7 +30,7 @@ public extension ErrorCommon {
     var failureReason: String? { self.description }
     var recoverySuggestion: String? { self.description }
     var helpAnchor: String? { self.description }
-    #warning("if localizedDescription not defined we have sigterm for linux")
+    #warning("if localizedDescription not defined we have sigterm for linux https://github.com/swiftlang/swift-corelibs-foundation/issues/5221")
     var localizedDescription: String { self.description }
     
     init(_ reason: String, file: String = #file, function: String = #function, line: Int = #line) {
