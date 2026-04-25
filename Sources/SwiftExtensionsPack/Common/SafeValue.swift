@@ -37,7 +37,7 @@ final public class SendableValue<Value>: @unchecked Sendable {
         attributes: .concurrent
     )
 
-    init(_ val: Value) {
+    public init(_ val: Value) {
         self.data = val
     }
 
