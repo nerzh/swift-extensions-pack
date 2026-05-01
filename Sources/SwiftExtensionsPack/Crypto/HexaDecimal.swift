@@ -85,7 +85,10 @@ public extension Data {
     }
     
     var toHexadecimal: String {
-        self.map { String(format: "%02x", $0) }.joined()
+        self.map { 
+            let hex = String($0, radix: 16)
+            return hex.count == 1 ? "0" + hex : hex
+        }.joined()
     }
 }
 
