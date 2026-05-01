@@ -10,6 +10,8 @@ import CEd25519
 import Ed25519
 #if os(Linux)
 import Crypto
+#elseif os(Android)
+import Crypto
 #else
 import CryptoKit
 #endif

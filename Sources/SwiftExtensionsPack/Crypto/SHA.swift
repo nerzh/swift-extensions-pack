@@ -8,6 +8,8 @@
 import Foundation
 #if os(Linux)
 import Crypto
+#elseif os(Android)
+import Crypto
 #else
 import CryptoKit
 #endif
