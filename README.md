@@ -64,11 +64,6 @@ targets: [
 
 In Xcode, use `File -> Add Package Dependencies...` and enter the repository URL.
 
-### CocoaPods
-
-```ruby
-pod 'SwiftExtensionsPack', '~> 0.4.6'
-```
 
 ### Import
 
