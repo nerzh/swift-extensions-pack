@@ -53,11 +53,13 @@ final public class SendableValue<Value>: @unchecked Sendable {
     ///   wrapper's synchronization and may cause data races. Treat returned
     ///   reference values as read-only unless they are independently thread-safe.
     ///
-    /// - Returns: The current value stored in this wrapper.
-    public func read() async -> Value {
-        await withCheckedContinuation { continuation in
-            queue.async {
-                continuation.resume(returning: self.data)
+    /// - Returns: The current value stored in this wrapper.    
+    public var read: Value {
+        get async {
+            await withCheckedContinuation { continuation in
+                queue.async {
+                    continuation.resume(returning: self.data)
+                }
             }
         }
     }
