@@ -46,7 +46,7 @@ Add the package to `Package.swift`:
 dependencies: [
     .package(
         url: "https://github.com/nerzh/swift-extensions-pack.git",
-        from: "0.4.6"
+        from: "2.0.0"
     )
 ],
 targets: [
