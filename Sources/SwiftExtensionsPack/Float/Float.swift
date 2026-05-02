@@ -42,7 +42,11 @@ extension Float {
     public func round(toDecimalPlaces places: Int,
                       rule: FloatingPointRoundingRule=FloatingPointRoundingRule.up) -> Float
     {
+        #if os(Android)
+        let divisor = Float(pow(10.0, Double(places)))
+        #else
         let divisor = pow(10.0, Float(places))
+        #endif
         return (self * divisor).rounded(rule) / divisor
     }
 }
