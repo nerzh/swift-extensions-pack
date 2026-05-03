@@ -11,7 +11,7 @@ var packageDependencies: [Package.Dependency] = [
 
 var targetDependencies: [Target.Dependency] = [
     .product(name: "SwiftRegularExpression", package: "swift-regular-expression"),
-    .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: [.linux])),
+    .product(name: "Crypto", package: "swift-crypto"),
     .product(name: "Ed25519", package: "ed25519"),
 ]
 
