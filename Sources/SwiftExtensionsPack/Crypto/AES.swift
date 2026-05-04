@@ -6,12 +6,10 @@
 //
 
 import Foundation
-#if os(Linux)
-import Crypto
-#elseif os(Android)
-import Crypto
-#else
+#if canImport(CryptoKit)
 import CryptoKit
+#elseif canImport(Crypto)
+import Crypto
 #endif
 
 @available(iOS 13.0, macOS 10.15, *)
