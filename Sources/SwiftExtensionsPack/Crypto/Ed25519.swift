@@ -19,7 +19,7 @@ public extension SEPCrypto {
     
     final class Ed25519 {
         
-        public class func createKeyPair(seed32Byte: Data) -> (public: Data, secret: Data) {
+        public static func createKeyPair(seed32Byte: Data) -> (public: Data, secret: Data) {
             let publicKeyPtr = UnsafeMutablePointer<UInt8>.allocate(capacity: 32)
             let secretKeyPtr = UnsafeMutablePointer<UInt8>.allocate(capacity: 64)
             
@@ -41,12 +41,12 @@ public extension SEPCrypto {
             return (public: Data(buffer: publicKey), secret: Data(buffer: secretKey))
         }
         
-        public class func createKeyPairHex(seed32Byte: Data) -> (public: String, secret: String) {
+        public static func createKeyPairHex(seed32Byte: Data) -> (public: String, secret: String) {
             let keys: (public: Data, secret: Data) = createKeyPair(seed32Byte: seed32Byte)
             return (public: keys.public.toHexadecimal, secret: keys.secret.toHexadecimal)
         }
         
-        public class func sign(message: Data, publicKey32byte: Data, secretKey64byte: Data) -> Data {
+        public static func sign(message: Data, publicKey32byte: Data, secretKey64byte: Data) -> Data {
             let signaturePtr = UnsafeMutablePointer<UInt8>.allocate(capacity: 64)
             var message: [UInt8] = message.bytes
             var publicKey: [UInt8] = publicKey32byte.bytes
@@ -63,7 +63,7 @@ public extension SEPCrypto {
             return Data(buffer: signature)
         }
         
-        public class func createPublicKey(secretKey: Data) -> Data {
+        public static func createPublicKey(secretKey: Data) -> Data {
             let publicKeyPtr = UnsafeMutablePointer<UInt8>.allocate(capacity: 32)
             var secretKey: [UInt8] = secretKey.bytes
             
@@ -78,7 +78,7 @@ public extension SEPCrypto {
             return Data(buffer:publicKey)
         }
         
-        public class func edwardsToMontgomery(bytesData: Data) -> Data {
+        public static func edwardsToMontgomery(bytesData: Data) -> Data {
             var bytesData: Data = bytesData
             var y_coordinate: UInt8 = bytesData[31] & 0x7F
             if (bytesData[31] & 0x80) != 0 {
@@ -89,7 +89,7 @@ public extension SEPCrypto {
             return bytesData
         }
         
-        public class func convertEd25519ToX25519(ed25519PrivateKey: Data) -> Data {
+        public static func convertEd25519ToX25519(ed25519PrivateKey: Data) -> Data {
             var sha512Hash: Data = .init(SHA512.hash(data: ed25519PrivateKey))
             
             sha512Hash[0] &= 248
@@ -99,7 +99,7 @@ public extension SEPCrypto {
             return sha512Hash[0...31]
         }
         
-        public class func getKeyExchange(privateKey: Data, publicKey: Data) -> Data {
+        public static func getKeyExchange(privateKey: Data, publicKey: Data) -> Data {
             var privateKey: [UInt8] = privateKey.bytes
             var publicKey: [UInt8] = publicKey.bytes
             var buffer: [UInt8] = .init(repeating: 0, count: 32)
@@ -109,7 +109,7 @@ public extension SEPCrypto {
             return Data(buffer)
         }
         
-        public class func verify(signature: Data, message: Data, len: Int, publicKey: Data) -> Bool {
+        public static func verify(signature: Data, message: Data, len: Int, publicKey: Data) -> Bool {
             var message: [UInt8] = message.bytes
             var publicKey: [UInt8] = publicKey.bytes
             var signature: [UInt8] = signature.bytes

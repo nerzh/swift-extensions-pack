@@ -175,7 +175,7 @@ public final class Net {
         case BadData
     }
 
-    public class func sendRequest(
+    public static func sendRequest(
         url: String,
         method: String,
         headers: [String: String]? = nil,
@@ -216,7 +216,7 @@ public final class Net {
 
     @available(iOS 13, *)
     @available(macOS 12, *)
-    public class func sendRequest(
+    public static func sendRequest(
         url: String,
         method: String,
         headers: [String: String]? = nil,
@@ -289,7 +289,7 @@ public final class Net {
         return request
     }
 
-    public class func makeQueryParamsString(_ params: [String: Any]?) -> String
+    public static func makeQueryParamsString(_ params: [String: Any]?) -> String
     {
         guard let params = params else { return "" }
         var queryParamsString = params.count > 0 ? "?" : ""
@@ -298,11 +298,11 @@ public final class Net {
         return queryParamsString
     }
 
-    public class func paramsString(_ params: [String: Any]?) -> String {
+    public static func paramsString(_ params: [String: Any]?) -> String {
         toRailsQueryParams(params)
     }
 
-    public class func urlEncode(_ string: String) -> String {
+    public static func urlEncode(_ string: String) -> String {
         var allowedCharacters = CharacterSet.alphanumerics
         allowedCharacters.insert(charactersIn: ".-_")
         return string.addingPercentEncoding(
@@ -310,7 +310,7 @@ public final class Net {
         ) ?? ""
     }
 
-    public class func toQueryParams(_ params: [String: Any]?) -> String {
+    public static func toQueryParams(_ params: [String: Any]?) -> String {
         var paramsString = ""
         var first = true
         let separator: Character = "&"
@@ -328,7 +328,7 @@ public final class Net {
         return paramsString
     }
 
-    public class func toRailsQueryParams(_ anyObject: Any?) -> String {
+    public static func toRailsQueryParams(_ anyObject: Any?) -> String {
         func checkValue(
             _ parentName: String,
             _ anyObject: AnyObject,

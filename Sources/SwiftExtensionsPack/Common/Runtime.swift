@@ -7,18 +7,27 @@
 
 import Foundation
 
-protocol OptionalProtocol {
+public protocol OptionalProtocol {
     func wrappedType() -> Any.Type
 }
 extension Optional: OptionalProtocol {
-     func wrappedType() -> Any.Type { return Wrapped.self }
+    public func wrappedType() -> Any.Type {
+        return Wrapped.self
+    }
+    
+    public var unwrap: Wrapped {
+        get throws {
+            if let self { return self }
+            throw SEPCommonError("Can't unwrap optional, because it's nil")
+        }
+    }
 }
 
-protocol ArrayProtocol {
+public protocol ArrayProtocol {
     func wrappedType() -> Any.Type
 }
 extension Array: ArrayProtocol {
-     func wrappedType() -> Any.Type { return Element.self }
+    public func wrappedType() -> Any.Type { return Element.self }
 }
 
 /// example: Optional<Int> is true
