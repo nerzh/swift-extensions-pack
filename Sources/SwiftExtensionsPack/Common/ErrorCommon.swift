@@ -23,31 +23,31 @@ public enum ErrorCommonLevel: Cases {
     case debug
 }
 
-public extension ErrorCommon {
-    var description: String { "\(reason)" }
-    var debugDescription: String { self.description }
-    var errorDescription: String? { self.description }
-    var failureReason: String? { self.description }
-    var recoverySuggestion: String? { self.description }
-    var helpAnchor: String? { self.description }
+extension ErrorCommon {
+    public var description: String { "\(reason)" }
+    public var debugDescription: String { self.description }
+    public var errorDescription: String? { self.description }
+    public var failureReason: String? { self.description }
+    public var recoverySuggestion: String? { self.description }
+    public var helpAnchor: String? { self.description }
     #warning("if localizedDescription not defined we have sigterm for linux https://github.com/swiftlang/swift-corelibs-foundation/issues/5221")
-    var localizedDescription: String { self.description }
+    public var localizedDescription: String { self.description }
     
-    init(_ reason: String, file: String = #file, function: String = #function, line: Int = #line) {
+    public init(_ reason: String, file: String = #file, function: String = #function, line: Int = #line) {
         self.init()
         self.reason = "\(file), \(function), line \(line): \(reason)"
     }
     
-    init(_ error: Error, errorLevel: ErrorCommonLevel = .debug, file: String = #file, function: String = #function, line: Int = #line) {
+    public init(_ error: Error, errorLevel: ErrorCommonLevel = .debug, file: String = #file, function: String = #function, line: Int = #line) {
         self.init(Self.getDetailedErrorMessage(error, errorLevel: errorLevel), file: file, function: function, line: line)
     }
     
-    init(_ error: Error, exReason: String, errorLevel: ErrorCommonLevel = .debug, file: String = #file, function: String = #function, line: Int = #line) {
+    public init(_ error: Error, exReason: String, errorLevel: ErrorCommonLevel = .debug, file: String = #file, function: String = #function, line: Int = #line) {
         let textError: String = "[\(exReason)] \(Self.getDetailedErrorMessage(error, errorLevel: errorLevel))"
         self.init(textError, file: file, function: function, line: line)
     }
     
-    static func error(_ error: Error, file: String = #file, function: String = #function, line: Int = #line) -> Self {
+    public static func error(_ error: Error, file: String = #file, function: String = #function, line: Int = #line) -> Self {
         Self(error, errorLevel: .debug, file: file, function: function, line: line)
     }
     

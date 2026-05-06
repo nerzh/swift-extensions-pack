@@ -24,12 +24,12 @@ public enum Endianness {
     case littleEndian
 }
 
-public extension ToBytesConvertable {
-    init(_ bytes: [UInt8]) {
+extension ToBytesConvertable {
+    public init(_ bytes: [UInt8]) {
         self = Self.init(bytes, endian: .littleEndian)
     }
     
-    init(_ bytes: [UInt8], endian: Endianness) {
+    public init(_ bytes: [UInt8], endian: Endianness) {
         var bytes: [UInt8] = bytes
         if endian == .bigEndian {
             bytes = bytes.reversed()
@@ -39,12 +39,12 @@ public extension ToBytesConvertable {
         self = number
     }
     
-    func toBytes(endian: Endianness = .littleEndian) -> [UInt8] {
+    public func toBytes(endian: Endianness = .littleEndian) -> [UInt8] {
         let count: Int = MemoryLayout<Self>.size
         return toBytes(endian: endian, count: count)
     }
     
-    func toBytes(endian: Endianness = .littleEndian, count: Int) -> [UInt8] {
+    public func toBytes(endian: Endianness = .littleEndian, count: Int) -> [UInt8] {
         var integer: Self
         switch endian {
         case .bigEndian: integer = self.bigEndian
@@ -59,8 +59,8 @@ public extension ToBytesConvertable {
     }
 }
 
-public extension ToBitsConvertable {
-    func toBits(endian: Endianness = .littleEndian) -> String {
+extension ToBitsConvertable {
+    public func toBits(endian: Endianness = .littleEndian) -> String {
         var integer: Self
         switch endian {
         case .bigEndian: integer = self.bigEndian
@@ -84,5 +84,4 @@ extension Int16: ToBytesConvertable & ToBitsConvertable {}
 extension Int32: ToBytesConvertable & ToBitsConvertable {}
 extension Int64: ToBytesConvertable & ToBitsConvertable {}
 extension Int: ToBytesConvertable & ToBitsConvertable {}
-
 

@@ -14,8 +14,8 @@ import Crypto
 
 private typealias CryptoHMAC = HMAC
 
-public extension SEPCrypto {
-    enum HMAC: Cases {
+extension SEPCrypto {
+    public enum HMAC: Cases {
         case sha256
         case sha384
         case sha512

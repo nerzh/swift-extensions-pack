@@ -272,58 +272,57 @@ public enum AnyValue: Decodable, Encodable, Equatable {
     }
 }
 
-public extension String {
-    func toAnyValue() -> AnyValue? {
+extension String {
+    public func toAnyValue() -> AnyValue? {
         self.toDictionary()?.toAnyValue()
     }
 }
 
 
-public extension Array {
-    func toAnyValue() -> AnyValue {
+extension Array {
+    public func toAnyValue() -> AnyValue {
         AnyValue(self)
     }
 }
 
-public extension Dictionary {
-    func toAnyValue() -> AnyValue where Key == String, Value == Any {
+extension Dictionary {
+    public func toAnyValue() -> AnyValue where Key == String, Value == Any {
         AnyValue(self)
     }
     
-    func toAnyValue() -> AnyValue where Key == String, Value == Any? {
+    public func toAnyValue() -> AnyValue where Key == String, Value == Any? {
         AnyValue(self)
     }
     /// Other variants for fix Ambiguous use
-    func toAnyValue() -> AnyValue where Key == String, Value == String {
+    public func toAnyValue() -> AnyValue where Key == String, Value == String {
         AnyValue(self)
     }
     
-    func toAnyValue() -> AnyValue where Key == String, Value == String? {
+    public func toAnyValue() -> AnyValue where Key == String, Value == String? {
         AnyValue(self)
     }
     
-    func toAnyValue() -> AnyValue where Key == String, Value == Int {
+    public func toAnyValue() -> AnyValue where Key == String, Value == Int {
         AnyValue(self)
     }
     
-    func toAnyValue() -> AnyValue where Key == String, Value == Int? {
+    public func toAnyValue() -> AnyValue where Key == String, Value == Int? {
         AnyValue(self)
     }
     
-    func toAnyValue() -> AnyValue where Key == String, Value == Float {
+    public func toAnyValue() -> AnyValue where Key == String, Value == Float {
         AnyValue(self)
     }
     
-    func toAnyValue() -> AnyValue where Key == String, Value == Float? {
+    public func toAnyValue() -> AnyValue where Key == String, Value == Float? {
         AnyValue(self)
     }
     
-    func toAnyValue() -> AnyValue where Key == String, Value == [Any] {
+    public func toAnyValue() -> AnyValue where Key == String, Value == [Any] {
         AnyValue(self)
     }
     
-    func toAnyValue() -> AnyValue where Key == String, Value == [Any]? {
+    public func toAnyValue() -> AnyValue where Key == String, Value == [Any]? {
         AnyValue(self)
     }
 }
-

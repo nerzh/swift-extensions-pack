@@ -12,16 +12,16 @@ public class ObjectId: @unchecked Sendable { public init() {} }
 public protocol ObjectIdentifiable {
     func objectId() -> ObjectIdentifier
 }
-public extension ObjectIdentifiable where Self: AnyObject {
-    func objectId() -> ObjectIdentifier {
+extension ObjectIdentifiable where Self: AnyObject {
+    public func objectId() -> ObjectIdentifier {
         ObjectIdentifier(self)
     }
 }
 public protocol ObjectIdentifiableStruct: ObjectIdentifiable {
     var _objectId: ObjectId { get }
 }
-public extension ObjectIdentifiableStruct {
-    func objectId() -> ObjectIdentifier {
+extension ObjectIdentifiableStruct {
+    public func objectId() -> ObjectIdentifier {
         ObjectIdentifier(_objectId)
     }
 }

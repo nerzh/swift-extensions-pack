@@ -7,9 +7,9 @@
 
 import Foundation
 
-public extension String {
+extension String {
     
-    func chunks(_ size: Int) -> [String] {
+    public func chunks(_ size: Int) -> [String] {
         guard size > 0 else { return [self] }
         var result = [String]()
         var startIndex = self.startIndex

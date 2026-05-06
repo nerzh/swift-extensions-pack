@@ -8,22 +8,22 @@
 import Foundation
 import SwiftRegularExpression
 
-public extension String {
+extension String {
     
-    var dataFromHex: Data? { Data(hexString: self) }
+    public var dataFromHex: Data? { Data(hexString: self) }
     
-    func dataFromHexThrowing() throws -> Data {
+    public func dataFromHexThrowing() throws -> Data {
         guard let data = Data(hexString: self) else {
             throw SEPCommonError("Try get Data from hexString failed. Please, only hex format !")
         }
         return data
     }
     
-    var isHexNumber: Bool {
+    public var isHexNumber: Bool {
         filter(\.isHexDigit).count == count
     }
     
-    var hexToUInt: UInt {
+    public var hexToUInt: UInt {
         get throws {
             guard let value = UInt(self, radix: 16) else {
                 throw SEPCommonError("Can not convert hex: \(self) to UInt")
@@ -45,25 +45,24 @@ extension String {
 
 
 // MARK: BASE64
-public extension String {
+extension String {
     
-    func base64Encoded() -> String? {
+    public func base64Encoded() -> String? {
         if let data = self.data(using: .utf8) {
             return data.base64EncodedString()
         }
         return nil
     }
     
-    func base64Decoded() -> String? {
+    public func base64Decoded() -> String? {
         if let data = Data(base64Encoded: self, options: .ignoreUnknownCharacters) {
             return String(data: data, encoding: .utf8)
         }
         return nil
     }
     
-    func isBase64() -> Bool {
+    public func isBase64() -> Bool {
         let regexp = #"^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=)?$"#
         return self.trimmingCharacters(in: .whitespacesAndNewlines)[regexp]
     }
 }
-

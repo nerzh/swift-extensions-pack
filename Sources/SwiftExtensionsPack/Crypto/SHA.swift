@@ -12,8 +12,8 @@ import CryptoKit
 import Crypto
 #endif
 
-public extension SEPCrypto {
-    enum SHA {
+extension SEPCrypto {
+    public enum SHA {
         case sha256
         case sha384
         case sha512

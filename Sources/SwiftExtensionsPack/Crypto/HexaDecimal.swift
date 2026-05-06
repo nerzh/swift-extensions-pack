@@ -8,40 +8,40 @@
 import Foundation
 import SwiftRegularExpression
 
-public extension String {
+extension String {
 
-    init?(hexadecimal string: String, encoding: String.Encoding = .utf8) {
+    public init?(hexadecimal string: String, encoding: String.Encoding = .utf8) {
         guard let data = string.hexadecimalToData else { return nil }
         self.init(data: data, encoding: encoding)
     }
 
-    var hexadecimalToData: Data? {
+    public var hexadecimalToData: Data? {
         Data(hexString: self)
     }
 
-    var toHexadecimal: String {
+    public var toHexadecimal: String {
         let data: Data = .init(self.utf8)
         return data.map { String(format: "%02x", $0) }.joined()
     }
     
-    func fromHexadecimal(encoding: String.Encoding = .utf8) -> String? {
+    public func fromHexadecimal(encoding: String.Encoding = .utf8) -> String? {
         String(hexadecimal: self, encoding: encoding)
     }
     
-    var addHexZeroX: String {
+    public var addHexZeroX: String {
         if !self[#"^0x"#] {
             return "0x\(self)"
         }
         return self
     }
-    var removeHexZeroX: String { self.replace(#"^0x"#, "") }
-    var deleteHexZeroX: String { self.removeHexZeroX }
-    var add0x: String { addHexZeroX }
-    var remove0x: String { self.removeHexZeroX }
-    var delete0x: String { self.removeHexZeroX }
+    public var removeHexZeroX: String { self.replace(#"^0x"#, "") }
+    public var deleteHexZeroX: String { self.removeHexZeroX }
+    public var add0x: String { addHexZeroX }
+    public var remove0x: String { self.removeHexZeroX }
+    public var delete0x: String { self.removeHexZeroX }
     
     /// this nedeed only for initializator Data(stringHex: hex)
-    var addFirstZeroToHexIfNeeded: String {
+    public var addFirstZeroToHexIfNeeded: String {
         var result: String = self
         if !result[#"^0x"#], result.count % 2 != 0 {
             result = "0" + result
@@ -50,11 +50,11 @@ public extension String {
         return result
     }
     
-    var hexClear: String {
+    public var hexClear: String {
         self.replace(#"^0x0+"#, "0x")
     }
     
-    func dataFromHexOrBase64() throws -> Data {
+    public func dataFromHexOrBase64() throws -> Data {
         if self.isHexNumber {
             return try self.remove0x.dataFromHexThrowing()
         } else if self.isBase64() {
@@ -65,9 +65,9 @@ public extension String {
     }
 }
 
-public extension Data {
+extension Data {
 
-    init?(hexString: String) {
+    public init?(hexString: String) {
         let len = hexString.count / 2
         var data = Data(capacity: len)
         var i = hexString.startIndex
@@ -84,12 +84,11 @@ public extension Data {
         self = data
     }
     
-    var toHexadecimal: String {
+    public var toHexadecimal: String {
         self.map { 
             let hex = String($0, radix: 16)
             return hex.count == 1 ? "0" + hex : hex
         }.joined()
     }
 }
-
 

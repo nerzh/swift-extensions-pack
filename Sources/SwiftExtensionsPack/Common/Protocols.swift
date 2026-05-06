@@ -11,8 +11,8 @@ public protocol Cases {
     var caseName: String { get }
 }
 
-public extension Cases {
-    var caseName: String { "\(String(describing: self))" }
+extension Cases {
+    public var caseName: String { "\(String(describing: self))" }
 }
 
 public protocol AnyOptional {

@@ -15,9 +15,9 @@ import Crypto
 #endif
 
 
-public extension SEPCrypto {
+extension SEPCrypto {
     
-    final class Ed25519 {
+    public final class Ed25519 {
         
         public static func createKeyPair(seed32Byte: Data) -> (public: Data, secret: Data) {
             let publicKeyPtr = UnsafeMutablePointer<UInt8>.allocate(capacity: 32)

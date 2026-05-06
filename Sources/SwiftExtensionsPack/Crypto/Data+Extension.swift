@@ -7,7 +7,7 @@
 
 import Foundation
 
-public extension Data {
-    var getBytes: [UInt8] { [UInt8](self) }
-    var bytes: [UInt8] { getBytes }
+extension Data {
+    public var getBytes: [UInt8] { [UInt8](self) }
+    public var bytes: [UInt8] { getBytes }
 }
