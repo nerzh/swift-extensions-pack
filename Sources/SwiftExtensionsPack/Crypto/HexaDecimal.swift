@@ -44,9 +44,9 @@ extension String {
     public var hexToData: Data? { Data(hexString: self) }
     public var dataFromHex: Data? { hexToData }
 
-    public var toHexadecimal: String {
+    public var textToHex: String {
         let data: Data = .init(self.utf8)
-        return data.map { String(format: "%02x", $0) }.joined()
+        return data.toHexadecimal
     }
     
     // MARK: Unicode
