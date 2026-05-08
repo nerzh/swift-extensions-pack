@@ -9,45 +9,72 @@ import Foundation
 import SwiftRegularExpression
 
 extension String {
-
+    
+    public func dataFromHexThrowing() throws -> Data {
+        guard let data = Data(hexString: self) else {
+            throw SEPCommonError("Try get Data from hexString failed. Please, only hex format !")
+        }
+        return data
+    }
+    
+    public var isHexNumber: Bool {
+        filter(\.isHexDigit).count == count
+    }
+    
+    public var hexToUInt: UInt {
+        get throws {
+            guard let value = UInt(self, radix: 16) else {
+                throw SEPCommonError("Can not convert hex: \(self) to UInt")
+            }
+            return value
+        }
+    }
+    
+    // MARK: Text From Hex
     public init?(hexadecimal string: String, encoding: String.Encoding = .utf8) {
-        guard let data = string.hexadecimalToData else { return nil }
+        guard let data = string.hexToData else { return nil }
         self.init(data: data, encoding: encoding)
     }
-
-    public var hexadecimalToData: Data? {
-        Data(hexString: self)
+    
+    public func toText(encoding: String.Encoding = .utf8) -> String? {
+        String(hexadecimal: self, encoding: encoding)
     }
+
+    // MARK: Data From Hex
+    public var hexToData: Data? { Data(hexString: self) }
+    public var dataFromHex: Data? { hexToData }
 
     public var toHexadecimal: String {
         let data: Data = .init(self.utf8)
         return data.map { String(format: "%02x", $0) }.joined()
     }
     
-    public func fromHexadecimal(encoding: String.Encoding = .utf8) -> String? {
-        String(hexadecimal: self, encoding: encoding)
+    // MARK: Unicode
+    /// "043d".hexToCharacter()
+    /// Converte Hex Unicode to Character
+    public func hexToCharacter() -> Character {
+        var result = Character(UnicodeScalar(0)!)
+        if let decimal = Int(self, radix: 16) {
+            result = Character(UnicodeScalar(decimal)!)
+        }
+        return result
     }
     
-    public var addHexZeroX: String {
+    public var add0x: String {
         if !self[#"^0x"#] {
             return "0x\(self)"
         }
         return self
     }
-    public var removeHexZeroX: String { self.replace(#"^0x"#, "") }
-    public var deleteHexZeroX: String { self.removeHexZeroX }
-    public var add0x: String { addHexZeroX }
-    public var remove0x: String { self.removeHexZeroX }
-    public var delete0x: String { self.removeHexZeroX }
+    public var remove0x: String { self.replace(#"^0x"#, "") }
+    public var delete0x: String { self.remove0x }
     
     /// this nedeed only for initializator Data(stringHex: hex)
     public var addFirstZeroToHexIfNeeded: String {
-        var result: String = self
-        if !result[#"^0x"#], result.count % 2 != 0 {
-            result = "0" + result
+        if !self[#"^0x"#], self.count % 2 != 0 {
+            return "0" + self
         }
-        
-        return result
+        return self
     }
     
     public var hexClear: String {
@@ -68,6 +95,7 @@ extension String {
 extension Data {
 
     public init?(hexString: String) {
+        let hexString = hexString.addFirstZeroToHexIfNeeded
         let len = hexString.count / 2
         var data = Data(capacity: len)
         var i = hexString.startIndex

@@ -8,42 +8,6 @@
 import Foundation
 import SwiftRegularExpression
 
-extension String {
-    
-    public var dataFromHex: Data? { Data(hexString: self) }
-    
-    public func dataFromHexThrowing() throws -> Data {
-        guard let data = Data(hexString: self) else {
-            throw SEPCommonError("Try get Data from hexString failed. Please, only hex format !")
-        }
-        return data
-    }
-    
-    public var isHexNumber: Bool {
-        filter(\.isHexDigit).count == count
-    }
-    
-    public var hexToUInt: UInt {
-        get throws {
-            guard let value = UInt(self, radix: 16) else {
-                throw SEPCommonError("Can not convert hex: \(self) to UInt")
-            }
-            return value
-        }
-    }
-}
-
-
-// MARK: Unicode
-extension String {
-
-    /// "043d".hexToCharacter()
-    public func hexToCharacter() -> Character {
-        return SwiftExtensionsPack.hexToCharacter(self)
-    }
-}
-
-
 // MARK: BASE64
 extension String {
     
