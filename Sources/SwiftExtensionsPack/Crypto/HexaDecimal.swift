@@ -36,7 +36,7 @@ extension String {
         self.init(data: data, encoding: encoding)
     }
     
-    public func toText(encoding: String.Encoding = .utf8) -> String? {
+    public func hexToText(encoding: String.Encoding = .utf8) -> String? {
         String(hexadecimal: self, encoding: encoding)
     }
 
