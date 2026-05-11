@@ -78,7 +78,10 @@ extension String {
     }
     
     public var hexClear: String {
-        self.replace(#"^0x0+"#, "0x")
+        if self.trimmingCharacters(in: .whitespacesAndNewlines) == "0x0" {
+            return self
+        }
+        return self.replace(#"^0x0+"#, "0x")
     }
     
     public func dataFromHexOrBase64() throws -> Data {
