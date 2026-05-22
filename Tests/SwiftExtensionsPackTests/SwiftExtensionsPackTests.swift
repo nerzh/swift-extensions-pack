@@ -102,7 +102,7 @@ final class swift_extensions_packTests: XCTestCase {
             code: 42,
             userInfo: [
                 NSLocalizedDescriptionKey: "ns localized description",
-                NSLocalizedFailureErrorKey: "ns failure",
+                "NSLocalizedFailure": "ns failure",
                 NSLocalizedFailureReasonErrorKey: "ns failure reason",
                 NSLocalizedRecoverySuggestionErrorKey: "ns recovery",
                 NSLocalizedRecoveryOptionsErrorKey: ["Retry", "Cancel"],

@@ -25,6 +25,7 @@ public enum ErrorCommonLevel: Cases {
 
 extension ErrorCommon {
     private static var multipleUnderlyingErrorsUserInfoKey: String { "NSMultipleUnderlyingErrors" }
+    private static var localizedFailureUserInfoKey: String { "NSLocalizedFailure" }
     private static var maxUnderlyingErrorDepth: Int { 5 }
     
     public var description: String { "\(reason)" }
@@ -107,7 +108,7 @@ extension ErrorCommon {
         depth: Int
     ) {
         collector.add(nsError.userInfo[NSLocalizedDescriptionKey] as? String)
-        collector.add(nsError.userInfo[NSLocalizedFailureErrorKey] as? String)
+        collector.add(nsError.userInfo[localizedFailureUserInfoKey] as? String)
         collector.add(nsError.userInfo[NSLocalizedFailureReasonErrorKey] as? String)
         collector.add(nsError.userInfo[NSLocalizedRecoverySuggestionErrorKey] as? String)
         collector.add(nsError.userInfo[NSHelpAnchorErrorKey] as? String)
@@ -157,7 +158,7 @@ extension ErrorCommon {
     ) {
         let skippedKeys: Set<String> = [
             NSLocalizedDescriptionKey,
-            NSLocalizedFailureErrorKey,
+            localizedFailureUserInfoKey,
             NSLocalizedFailureReasonErrorKey,
             NSLocalizedRecoverySuggestionErrorKey,
             NSLocalizedRecoveryOptionsErrorKey,
