@@ -126,6 +126,7 @@ final class swift_extensions_packTests: XCTestCase {
         assertContains(debugError.reason, "domain: Extractor.NSError, code: 42")
         assertContains(debugError.reason, "RequestID: req-42")
         assertContains(debugError.reason, "FailedURL: https://example.com/api")
+        assertDoesNotContain(debugError.reason, "Underlying error:")
         
         assertContains(releaseError.reason, "ns localized description")
         assertContains(releaseError.reason, "ns failure reason")
@@ -151,10 +152,10 @@ final class swift_extensions_packTests: XCTestCase {
         let error = SEPCommonError(source, file: "File.swift", function: "run()", line: 10)
         
         assertContains(error.reason, "outer description")
-        assertContains(error.reason, "Underlying error:")
-        assertContains(error.reason, "first underlying")
-        assertContains(error.reason, "Underlying error 1:")
-        assertContains(error.reason, "second underlying")
+        assertContains(error.reason, "Underlying error: first underlying")
+        assertContains(error.reason, "Underlying error 1: second underlying")
+        assertDoesNotContain(error.reason, "Underlying error:\n")
+        assertDoesNotContain(error.reason, "Underlying error 1:\n")
     }
     
     func testDecodingErrorCollectsDebugDescriptionAndUnderlyingError() {
@@ -170,6 +171,27 @@ final class swift_extensions_packTests: XCTestCase {
         assertContains(error.reason, "cannot decode payload")
         assertContains(error.reason, "raw payload is empty")
         assertContains(error.reason, "domain: NSCocoaErrorDomain, code: 4864")
+    }
+    
+    func testJSONDecoderErrorCanBeWrappedFromCatchWithoutLosingDecodingDetails() throws {
+        let json = """
+        {
+            "id": 7,
+            "name": "SomeName",
+            "amount": "not-an-int"
+        }
+        """
+        
+        do {
+            _ = try JSONDecoder().decode(SomeModel.self, from: Data(json.utf8))
+            XCTFail("Expected JSONDecoder to throw a DecodingError.")
+        } catch {
+            let wrappedError = SEPCommonError(error)
+            
+            assertContains(wrappedError.reason, "typeMismatch")
+            assertContains(wrappedError.reason, "amount")
+            assertContains(wrappedError.reason, "Int")
+        }
     }
     
     func testCustomNSErrorUsesNSErrorBridgeAndUnderlyingError() {
@@ -197,6 +219,12 @@ final class swift_extensions_packTests: XCTestCase {
     
     private enum TestCodingKey: String, CodingKey {
         case payload
+    }
+    
+    private struct SomeModel: Decodable {
+        let id: Int
+        let name: String
+        let amount: Int
     }
     
     private struct LocalizedVariantError: Error, LocalizedError {

@@ -182,8 +182,7 @@ extension ErrorCommon {
     ) {
         switch value {
         case let error as Error:
-            collector.add("\(key):")
-            collectDetailedErrorMessage(error, errorLevel: .debug, collector: &collector, visitedNSErrors: &visitedNSErrors, depth: depth + 1)
+            collectNestedErrorMessage(error, label: "\(key):", errorLevel: .debug, collector: &collector, visitedNSErrors: &visitedNSErrors, depth: depth)
         case let string as String:
             collector.add("\(key): \(string)")
         case let string as NSString:
@@ -224,8 +223,14 @@ extension ErrorCommon {
         depth: Int
     ) {
         if let underlyingError = nsError.userInfo[NSUnderlyingErrorKey] as? Error {
-            collector.add("Underlying error:")
-            collectDetailedErrorMessage(underlyingError, errorLevel: errorLevel, collector: &collector, visitedNSErrors: &visitedNSErrors, depth: depth + 1)
+            collectNestedErrorMessage(
+                underlyingError,
+                label: "Underlying error:",
+                errorLevel: errorLevel,
+                collector: &collector,
+                visitedNSErrors: &visitedNSErrors,
+                depth: depth
+            )
         }
         
         let multipleUnderlyingErrors: [Error]
@@ -238,9 +243,28 @@ extension ErrorCommon {
         }
         
         for (index, error) in multipleUnderlyingErrors.enumerated() {
-            collector.add("Underlying error \(index + 1):")
-            collectDetailedErrorMessage(error, errorLevel: errorLevel, collector: &collector, visitedNSErrors: &visitedNSErrors, depth: depth + 1)
+            collectNestedErrorMessage(
+                error,
+                label: "Underlying error \(index + 1):",
+                errorLevel: errorLevel,
+                collector: &collector,
+                visitedNSErrors: &visitedNSErrors,
+                depth: depth
+            )
         }
+    }
+    
+    private static func collectNestedErrorMessage(
+        _ error: Error,
+        label: String,
+        errorLevel: ErrorCommonLevel,
+        collector: inout ErrorCommonMessageCollector,
+        visitedNSErrors: inout Set<ObjectIdentifier>,
+        depth: Int
+    ) {
+        var nestedCollector: ErrorCommonMessageCollector = .init()
+        collectDetailedErrorMessage(error, errorLevel: errorLevel, collector: &nestedCollector, visitedNSErrors: &visitedNSErrors, depth: depth + 1)
+        collector.add(nestedCollector.messages, prefixedBy: label)
     }
 }
 
@@ -251,14 +275,33 @@ private struct ErrorCommonMessageCollector {
     var isEmpty: Bool { messages.isEmpty }
     
     mutating func add(_ message: String?) {
-        guard let message = message?.trimmingCharacters(in: .whitespacesAndNewlines), !message.isEmpty else { return }
+        guard let message = normalized(message) else { return }
         guard uniqueMessages.insert(message).inserted else { return }
         messages.append(message)
+    }
+    
+    mutating func add(_ newMessages: [String], prefixedBy prefix: String) {
+        let normalizedMessages: [String] = newMessages.compactMap { normalized($0) }.filter { !uniqueMessages.contains($0) }
+        guard let firstMessage = normalizedMessages.first else { return }
+        
+        if let prefix = normalized(prefix) {
+            guard uniqueMessages.insert(firstMessage).inserted else { return }
+            messages.append("\(prefix) \(firstMessage)")
+        } else {
+            add(firstMessage)
+        }
+        
+        normalizedMessages.dropFirst().forEach { add($0) }
     }
     
     func message(defaultValue: String) -> String {
         if messages.isEmpty { return defaultValue }
         return messages.joined(separator: "\n")
+    }
+    
+    private func normalized(_ message: String?) -> String? {
+        guard let message = message?.trimmingCharacters(in: .whitespacesAndNewlines), !message.isEmpty else { return nil }
+        return message
     }
 }
 
