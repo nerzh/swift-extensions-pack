@@ -655,9 +655,45 @@ let verified = SEPCrypto.Ed25519.verify(
 | `createPublicKey(secretKey:)` | Rebuilds the public key from a secret key. |
 | `sign(message:publicKey32byte:secretKey64byte:)` | Creates a 64-byte signature. |
 | `verify(signature:message:len:publicKey:)` | Verifies a signature. |
-| `edwardsToMontgomery(bytesData:)` | Converts Edwards bytes into a Montgomery-style representation. |
-| `convertEd25519ToX25519(ed25519PrivateKey:)` | Converts an Ed25519 private key into an X25519 private key. |
-| `getKeyExchange(privateKey:publicKey:)` | Performs key exchange and returns a shared secret. |
+| `edwardsToMontgomery(bytesData:) throws` | Converts exactly 32 compressed Ed25519 bytes to a 32-byte little-endian Montgomery u-coordinate. Checks canonical y and rejects y = 1; does not validate the full point or subgroup. |
+| `convertEd25519ToX25519(ed25519PrivateKey:)` | Hashes an original 32-byte Ed25519 seed once and clamps the first 32 digest bytes to prepare an X25519 scalar. Do not pass an expanded secret or prepared scalar. |
+| `getKeyExchange(privateKey:publicKey:) throws` | Accepts a prepared 32-byte private scalar and the peer's original 32-byte Ed25519 public key. Returns a 32-byte raw shared secret; rejects invalid lengths, noncanonical y, y = 1, and all-zero output. |
+
+#### Coordinate conversion and key exchange migration
+
+`edwardsToMontgomery` and `getKeyExchange` now throw `SEPCrypto.Ed25519.KeyError`.
+Add `try` and propagate or handle errors at existing call sites. Their argument labels
+and `Data` return types are unchanged. Inputs of the wrong length are rejected rather
+than truncated, including 64-byte expanded secrets passed to `getKeyExchange`.
+
+```swift
+let aliceSeed = randomData(count: 32)
+let bobSeed = randomData(count: 32)
+let alice = SEPCrypto.Ed25519.createKeyPair(seed32Byte: aliceSeed)
+let bob = SEPCrypto.Ed25519.createKeyPair(seed32Byte: bobSeed)
+
+// For an API that expects an X25519 public key:
+let bobMontgomery = try SEPCrypto.Ed25519.edwardsToMontgomery(bytesData: bob.public)
+
+// This C-backed API expects the original Edwards public key, not bobMontgomery.
+let aliceScalar = alice.secret.prefix(32)
+let ab = try SEPCrypto.Ed25519.getKeyExchange(privateKey: aliceScalar, publicKey: bob.public)
+
+// Alternatively, derive the scalar once from the original seed.
+let bobScalar = SEPCrypto.Ed25519.convertEd25519ToX25519(ed25519PrivateKey: bobSeed)
+let ba = try SEPCrypto.Ed25519.getKeyExchange(privateKey: bobScalar, publicKey: alice.public)
+assert(ab == ba)
+```
+
+Both throwing methods support `Data` slices with nonzero `startIndex`. They check
+the coordinate encoding, but do not perform full point or subgroup validation.
+`getKeyExchange` also rejects an all-zero shared secret; this is not a full validation
+of the Edwards public key. Its output is a raw shared secret, to be processed by the
+key derivation step required by your protocol.
+
+Coordinate conversion uses the public `PublicKey.toX25519()` API from
+`bytehubio/ed25519` 1.1.0 or later. Fixed independent libsodium vectors and their
+provenance are included in `Ed25519ConversionTests.swift`.
 
 ## HTTP and Multipart
 

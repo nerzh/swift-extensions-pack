@@ -6,12 +6,13 @@ let name: String = "SwiftExtensionsPack"
 var packageDependencies: [Package.Dependency] = [
     .package(url: "https://github.com/nerzh/swift-regular-expression", .upToNextMajor(from: "0.2.4")),
     .package(url: "https://github.com/apple/swift-crypto", .upToNextMajor(from: "4.5.0")),
-    .package(url: "https://github.com/bytehubio/ed25519", .upToNextMajor(from: "1.0.0")),
+    .package(url: "https://github.com/bytehubio/ed25519", .upToNextMajor(from: "1.1.0")),
 ]
 
 var targetDependencies: [Target.Dependency] = [
     .product(name: "SwiftRegularExpression", package: "swift-regular-expression"),
     .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: [.android, .driverKit, .linux, .openbsd, .wasi, .windows])),
+    .product(name: "CEd25519", package: "ed25519"),
     .product(name: "Ed25519", package: "ed25519"),
 ]
 

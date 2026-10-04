@@ -18,6 +18,29 @@ import Crypto
 extension SEPCrypto {
     
     public final class Ed25519 {
+
+        public enum KeyError: Error, LocalizedError, Equatable {
+            case invalidPublicKeyLength(actual: Int)
+            case invalidPrivateKeyLength(actual: Int)
+            case nonCanonicalYCoordinate
+            case undefinedMontgomeryCoordinate
+            case zeroSharedSecret
+
+            public var errorDescription: String? {
+                switch self {
+                case .invalidPublicKeyLength(let actual):
+                    return "An Ed25519 public key must contain exactly 32 bytes; received \(actual)."
+                case .invalidPrivateKeyLength(let actual):
+                    return "The prepared private scalar must contain exactly 32 bytes; received \(actual)."
+                case .nonCanonicalYCoordinate:
+                    return "The Ed25519 y-coordinate must be less than 2^255 - 19."
+                case .undefinedMontgomeryCoordinate:
+                    return "The Montgomery coordinate is undefined for Ed25519 y = 1."
+                case .zeroSharedSecret:
+                    return "Key exchange produced an all-zero shared secret."
+                }
+            }
+        }
         
         public static func createKeyPair(seed32Byte: Data) -> (public: Data, secret: Data) {
             let publicKeyPtr = UnsafeMutablePointer<UInt8>.allocate(capacity: 32)
@@ -78,17 +101,47 @@ extension SEPCrypto {
             return Data(buffer:publicKey)
         }
         
-        public static func edwardsToMontgomery(bytesData: Data) -> Data {
-            var bytesData: Data = bytesData
-            var y_coordinate: UInt8 = bytesData[31] & 0x7F
-            if (bytesData[31] & 0x80) != 0 {
-                y_coordinate += 0x80
+        /// Converts a 32-byte compressed Ed25519 public key to a 32-byte,
+        /// little-endian Montgomery u-coordinate: (1 + y) / (1 - y) mod (2^255 - 19).
+        /// The Edwards x-sign bit is ignored. Data slices are supported.
+        ///
+        /// This only converts coordinates: it does not check that the encoding
+        /// represents a curve point or that the point belongs to the prime-order subgroup.
+        /// - Throws: `KeyError` for an invalid length, noncanonical y, or y = 1.
+        public static func edwardsToMontgomery(bytesData: Data) throws -> Data {
+            guard bytesData.count == 32 else {
+                throw KeyError.invalidPublicKeyLength(actual: bytesData.count)
             }
-            bytesData.append(y_coordinate)
-            
-            return bytesData
+            do {
+                return Data(try PublicKey(bytesData.bytes).toX25519())
+            } catch Ed25519ConversionError.nonCanonicalPublicKey {
+                throw KeyError.nonCanonicalYCoordinate
+            } catch Ed25519ConversionError.undefinedMontgomeryCoordinate {
+                throw KeyError.undefinedMontgomeryCoordinate
+            }
+        }
+
+        /// Checks the coordinate encoding while preserving the original Edwards bytes.
+        private static func validatedEdwardsPublicKey(_ data: Data) throws -> [UInt8] {
+            guard data.count == 32 else {
+                throw KeyError.invalidPublicKeyLength(actual: data.count)
+            }
+            let bytes = data.bytes
+            var y = bytes
+            y[31] &= 0x7f
+            let prime: [UInt8] = [0xed] + [UInt8](repeating: 0xff, count: 30) + [0x7f]
+            guard y.reversed().lexicographicallyPrecedes(prime.reversed()) else {
+                throw KeyError.nonCanonicalYCoordinate
+            }
+            guard !(y[0] == 1 && y.dropFirst().allSatisfy { $0 == 0 }) else {
+                throw KeyError.undefinedMontgomeryCoordinate
+            }
+            return bytes
         }
         
+        /// Derives a prepared X25519 scalar by hashing an original 32-byte Ed25519 seed
+        /// with SHA-512 and clamping the first 32 bytes. Do not pass an already prepared
+        /// scalar or the expanded 64-byte secret returned by `createKeyPair(seed32Byte:)`.
         public static func convertEd25519ToX25519(ed25519PrivateKey: Data) -> Data {
             var sha512Hash: Data = .init(SHA512.hash(data: ed25519PrivateKey))
             
@@ -99,12 +152,29 @@ extension SEPCrypto {
             return sha512Hash[0...31]
         }
         
-        public static func getKeyExchange(privateKey: Data, publicKey: Data) -> Data {
-            var privateKey: [UInt8] = privateKey.bytes
-            var publicKey: [UInt8] = publicKey.bytes
+        /// Returns a 32-byte raw shared secret using a prepared 32-byte private scalar
+        /// and the peer's original 32-byte compressed Ed25519 public key.
+        ///
+        /// Use `createKeyPair(seed32Byte:).secret.prefix(32)` or the result of
+        /// `convertEd25519ToX25519(ed25519PrivateKey:)` as the private input, not a seed.
+        /// The C implementation clamps the scalar without hashing and converts the
+        /// Edwards public key internally. Do not pass `edwardsToMontgomery` output here.
+        /// Public-key validation is limited to the coordinate encoding, not curve or
+        /// subgroup membership; an all-zero shared secret is rejected.
+        /// - Throws: `KeyError` for invalid input lengths, noncanonical y, y = 1,
+        ///   or an all-zero shared secret.
+        public static func getKeyExchange(privateKey: Data, publicKey: Data) throws -> Data {
+            guard privateKey.count == 32 else {
+                throw KeyError.invalidPrivateKeyLength(actual: privateKey.count)
+            }
+            let publicKey = try validatedEdwardsPublicKey(publicKey)
+            let privateKey = privateKey.bytes
             var buffer: [UInt8] = .init(repeating: 0, count: 32)
             
-            ed25519_key_exchange(&buffer, &publicKey, &privateKey)
+            ed25519_key_exchange(&buffer, publicKey, privateKey)
+            guard buffer.reduce(UInt8(0), |) != 0 else {
+                throw KeyError.zeroSharedSecret
+            }
             
             return Data(buffer)
         }
