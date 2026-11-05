@@ -9,3 +9,5 @@ public struct Box<T: Copyable>: ~Copyable {
         return Self.init(self.value)
     }
 }
+
+extension Box: Sendable where T: Sendable {}
