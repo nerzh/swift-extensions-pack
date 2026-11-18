@@ -197,32 +197,27 @@ public final class Net {
         queryParams: [String: Any]? = nil,
         body: NetBody? = nil,
         session: URLSession? = nil,
-        beforeResume: (() -> Void)? = {},
-        afterResume: (() -> Void)? = {},
-        _ handler: @escaping @Sendable (Data?, URLResponse?, Error?) throws ->
-            Void = { _, _, _ in }
-    ) throws {
-        let request = try makeRequest(
-            url: url,
-            method: method,
-            headers: headers,
-            queryParams: queryParams,
-            body: body
-        )
+        _ handler: @escaping @Sendable (Data?, URLResponse?, Error?) -> Void = { _, _, _ in }
+    ) {
+        do {
+            let request = try makeRequest(
+                url: url,
+                method: method,
+                headers: headers,
+                queryParams: queryParams,
+                body: body
+            )
 
-        let dataTask = (session ?? sharedSession).dataTask(
-            with: request,
-            completionHandler: { (data, response, error) -> Void in
-                // Keep the throwing signature for compatibility. Callback errors cannot
-                // propagate through sendRequest's throws and must not trigger redelivery.
-                try? handler(data, response, error)
-            }
-        )
-
-        if let beforeResume = beforeResume { beforeResume() }
-        dataTask.resume()
-        if let afterResume = afterResume { afterResume() }
-        // sharedSession.finishTasksAndInvalidate()
+            let dataTask = (session ?? sharedSession).dataTask(
+                with: request,
+                completionHandler: { (data, response, error) -> Void in
+                    handler(data, response, error)
+                }
+            )
+            dataTask.resume()
+        } catch {
+            handler(nil, nil, error)
+        }
     }
 
     @available(iOS 13, *)
@@ -235,7 +230,16 @@ public final class Net {
         body: NetBody? = nil,
         session: URLSession? = nil
     ) async throws -> (data: Data, response: URLResponse) {
-        let state = AsyncRequestState()
+        typealias Response = (data: Data, response: URLResponse)
+        typealias Continuation = CheckedContinuation<Response, any Error>
+
+        enum State {
+            case idle
+            case waiting(Continuation, URLSessionDataTask?)
+            case finished
+        }
+
+        let state = SafeValue<State>(.idle)
         return try await withTaskCancellationHandler {
             try Task.checkCancellation()
             let request = try makeRequest(
@@ -248,75 +252,48 @@ public final class Net {
             try Task.checkCancellation()
 
             return try await withCheckedThrowingContinuation { continuation in
-                guard state.install(continuation) else { return }
+                let installed = state.change { state in
+                    guard case .idle = state else { return false }
+                    state = .waiting(continuation, nil)
+                    return true
+                }
+                guard installed else {
+                    // Cancellation may arrive before the continuation is installed.
+                    continuation.resume(throwing: CancellationError())
+                    return
+                }
+
                 let task = (session ?? sharedSession).dataTask(with: request) { data, response, error in
+                    let continuation = state.change { state -> Continuation? in
+                        guard case let .waiting(continuation, _) = state else { return nil }
+                        state = .finished
+                        return continuation
+                    }
+                    guard let continuation else { return }
+
                     if let data, let response {
-                        state.finish(.success((data: data, response: response)))
+                        continuation.resume(returning: (data: data, response: response))
                     } else if let error {
-                        state.finish(.failure(error))
+                        continuation.resume(throwing: error)
                     } else {
-                        state.finish(.failure(SEPCommonError("No result from Net 🤔")))
+                        continuation.resume(throwing: SEPCommonError("No result from Net 🤔"))
                     }
                 }
-                state.start(task)
+
+                let shouldStart = state.change { state in
+                    guard case let .waiting(continuation, _) = state else { return false }
+                    state = .waiting(continuation, task)
+                    return true
+                }
+                // Never call URLSessionTask methods under the lock: callbacks may be synchronous.
+                // If cancellation wins after registration, resume() cannot restart a cancelled task.
+                if shouldStart {
+                    task.resume()
+                } else {
+                    task.cancel()
+                }
             }
         } onCancel: {
-            state.cancel()
-        }
-    }
-
-    @available(iOS 13, *)
-    @available(macOS 12, *)
-    private final class AsyncRequestState: Sendable {
-        typealias Response = (data: Data, response: URLResponse)
-        typealias Continuation = CheckedContinuation<Response, any Error>
-
-        private enum State {
-            case idle
-            case waiting(Continuation, URLSessionDataTask?)
-            case finished
-        }
-
-        private let state = SafeValue<State>(.idle)
-
-        func install(_ continuation: Continuation) -> Bool {
-            let installed = state.change { state in
-                guard case .idle = state else { return false }
-                state = .waiting(continuation, nil)
-                return true
-            }
-            if !installed {
-                // Cancellation may arrive before the continuation is installed.
-                continuation.resume(throwing: CancellationError())
-            }
-            return installed
-        }
-
-        func start(_ task: URLSessionDataTask) {
-            let shouldStart = state.change { state in
-                guard case let .waiting(continuation, _) = state else { return false }
-                state = .waiting(continuation, task)
-                return true
-            }
-            // Never call URLSessionTask methods under the lock: callbacks may be synchronous.
-            // If cancellation wins after registration, resume() cannot restart a cancelled task.
-            if shouldStart {
-                task.resume()
-            } else {
-                task.cancel()
-            }
-        }
-
-        func finish(_ result: Result<Response, any Error>) {
-            let continuation = state.change { state -> Continuation? in
-                guard case let .waiting(continuation, _) = state else { return nil }
-                state = .finished
-                return continuation
-            }
-            continuation?.resume(with: result)
-        }
-
-        func cancel() {
             let pending = state.change { state -> (continuation: Continuation?, task: URLSessionDataTask?) in
                 defer { state = .finished }
                 guard case let .waiting(continuation, task) = state else { return (nil, nil) }

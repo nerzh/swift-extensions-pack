@@ -124,7 +124,6 @@ final class NetTestDataTask: URLSessionDataTask, @unchecked Sendable {
 
 enum NetTestError: Error, Equatable {
     case encodingFailed
-    case handlerFailed
 }
 
 struct FailingNetPayload: Encodable {

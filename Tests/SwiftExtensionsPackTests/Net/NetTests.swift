@@ -203,70 +203,72 @@ final class NetTests: XCTestCase {
         for (body, expectedPrefix) in bodies {
             let session = NetTestSession()
             defer { session.invalidateAndCancel() }
-            let calls = SafeValue<[String]>([])
+            let handlerCount = SafeValue(0)
 
-            XCTAssertThrowsError(try Net.sendRequest(
+            Net.sendRequest(
                 url: baseURL, method: "POST", headers: ["content-type": "application/invalid"],
-                body: body, session: session,
-                beforeResume: { calls.change { $0.append("before") } },
-                afterResume: { calls.change { $0.append("after") } }
-            ) { _, _, _ in calls.change { $0.append("handler") } }) { error in
-                guard case Net.NetErrors.ConflictingContentType(let expected, let actual) = error else {
-                    return XCTFail("Unexpected error: \(error)")
+                body: body, session: session
+            ) { data, response, error in
+                handlerCount.change { $0 += 1 }
+                XCTAssertNil(data)
+                XCTAssertNil(response)
+                guard let error, case Net.NetErrors.ConflictingContentType(let expected, let actual) = error else {
+                    return XCTFail("Unexpected error: \(String(describing: error))")
                 }
                 XCTAssertTrue(expected.hasPrefix(expectedPrefix))
                 XCTAssertEqual(actual, "application/invalid")
             }
             XCTAssertTrue(session.calls.value.isEmpty)
-            XCTAssertTrue(calls.value.isEmpty)
+            XCTAssertEqual(handlerCount.value, 1)
         }
     }
 
     func testInvalidURLFailsBeforeCreatingTask() {
         let session = NetTestSession()
         defer { session.invalidateAndCancel() }
+        let handlerCount = SafeValue(0)
 
-        XCTAssertThrowsError(try Net.sendRequest(
+        Net.sendRequest(
             url: "http://[invalid", method: "GET", queryParams: ["page": 2], session: session
-        )) { error in
-            guard case Net.NetErrors.NotValidParams = error else {
-                return XCTFail("Unexpected error: \(error)")
+        ) { data, response, error in
+            handlerCount.change { $0 += 1 }
+            XCTAssertNil(data)
+            XCTAssertNil(response)
+            guard let error, case Net.NetErrors.NotValidParams = error else {
+                return XCTFail("Unexpected error: \(String(describing: error))")
             }
         }
         XCTAssertTrue(session.calls.value.isEmpty)
+        XCTAssertEqual(handlerCount.value, 1)
     }
 
-    func testCallbackAPIThrowsJSONEncodingErrorBeforeCreatingTask() {
+    func testCallbackReceivesJSONEncodingErrorBeforeCreatingTask() {
         let session = NetTestSession()
         defer { session.invalidateAndCancel() }
+        let handlerCount = SafeValue(0)
 
-        XCTAssertThrowsError(try Net.sendRequest(
+        Net.sendRequest(
             url: baseURL, method: "POST", body: .json(FailingNetPayload()), session: session
-        )) {
-            XCTAssertEqual($0 as? NetTestError, .encodingFailed)
+        ) { data, response, error in
+            handlerCount.change { $0 += 1 }
+            XCTAssertNil(data)
+            XCTAssertNil(response)
+            XCTAssertEqual(error as? NetTestError, .encodingFailed)
         }
         XCTAssertTrue(session.calls.value.isEmpty)
+        XCTAssertEqual(handlerCount.value, 1)
     }
 
-    func testCallbackReceivesResponseAndHooksSurroundTaskResume() throws {
+    func testCallbackReceivesResponseAndResumesTaskOnce() throws {
         let url = try XCTUnwrap(URL(string: baseURL + "/resource"))
         let response = try XCTUnwrap(HTTPURLResponse(url: url, statusCode: 201, httpVersion: nil, headerFields: nil))
         let data = Data([0, 255, 42])
         let session = NetTestSession(reply: NetTestReply(data: data, response: response))
         defer { session.invalidateAndCancel() }
-        let hooks = SafeValue<[String]>([])
         let handlerCount = SafeValue(0)
 
-        try Net.sendRequest(
-            url: url.absoluteString, method: "POST", body: .raw("request"), session: session,
-            beforeResume: {
-                XCTAssertEqual(session.calls.value.first?.task.resumeCount.value, 0)
-                hooks.change { $0.append("before") }
-            },
-            afterResume: {
-                XCTAssertEqual(session.calls.value.first?.task.resumeCount.value, 1)
-                hooks.change { $0.append("after") }
-            }
+        Net.sendRequest(
+            url: url.absoluteString, method: "POST", body: .raw("request"), session: session
         ) { receivedData, receivedResponse, error in
             handlerCount.change { $0 += 1 }
             XCTAssertEqual(receivedData, data)
@@ -274,65 +276,24 @@ final class NetTests: XCTestCase {
             XCTAssertNil(error)
         }
 
-        XCTAssertEqual(hooks.value, ["before", "after"])
         XCTAssertEqual(handlerCount.value, 1)
         XCTAssertEqual(session.calls.value.count, 1)
+        XCTAssertEqual(session.calls.value.first?.task.resumeCount.value, 1)
     }
 
-    func testCallbackReceivesTransportError() throws {
+    func testCallbackReceivesTransportError() {
         let session = NetTestSession(reply: NetTestReply(error: URLError(.timedOut)))
         defer { session.invalidateAndCancel() }
         let handlerCount = SafeValue(0)
 
-        try Net.sendRequest(
-            url: baseURL, method: "GET", session: session, beforeResume: nil, afterResume: nil
+        Net.sendRequest(
+            url: baseURL, method: "GET", session: session
         ) { data, response, error in
             handlerCount.change { $0 += 1 }
             XCTAssertNil(data)
             XCTAssertNil(response)
             XCTAssertEqual((error as? URLError)?.code, .timedOut)
         }
-
-        XCTAssertEqual(handlerCount.value, 1)
-    }
-
-    func testThrowingCallbackIsNotCalledAgainAfterSuccess() throws {
-        let url = try XCTUnwrap(URL(string: baseURL))
-        let response = try XCTUnwrap(HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil))
-        let data = Data([0, 255, 42])
-        let session = NetTestSession(reply: NetTestReply(data: data, response: response))
-        defer { session.invalidateAndCancel() }
-        let handlerCount = SafeValue(0)
-
-        XCTAssertNoThrow(try Net.sendRequest(
-            url: baseURL, method: "GET", session: session, beforeResume: nil, afterResume: nil
-        ) {
-            receivedData, receivedResponse, error in
-            handlerCount.change { $0 += 1 }
-            XCTAssertEqual(receivedData, data)
-            XCTAssertEqual((receivedResponse as? HTTPURLResponse)?.statusCode, 200)
-            XCTAssertNil(error)
-            throw NetTestError.handlerFailed
-        })
-
-        XCTAssertEqual(handlerCount.value, 1)
-    }
-
-    func testThrowingCallbackIsNotCalledAgainAfterTransportError() {
-        let session = NetTestSession(reply: NetTestReply(error: URLError(.timedOut)))
-        defer { session.invalidateAndCancel() }
-        let handlerCount = SafeValue(0)
-
-        XCTAssertNoThrow(try Net.sendRequest(
-            url: baseURL, method: "GET", session: session, beforeResume: nil, afterResume: nil
-        ) {
-            data, response, error in
-            handlerCount.change { $0 += 1 }
-            XCTAssertNil(data)
-            XCTAssertNil(response)
-            XCTAssertEqual((error as? URLError)?.code, .timedOut)
-            throw NetTestError.handlerFailed
-        })
 
         XCTAssertEqual(handlerCount.value, 1)
     }
@@ -432,10 +393,16 @@ final class NetTests: XCTestCase {
     ) throws -> URLRequest {
         let session = NetTestSession()
         defer { session.invalidateAndCancel() }
-        try Net.sendRequest(
+        let requestError = SafeValue<Error?>(nil)
+        Net.sendRequest(
             url: url ?? baseURL + "/resource", method: method, headers: headers,
             queryParams: queryParams, body: body, session: session
-        )
+        ) { _, _, error in
+            requestError.change { $0 = error }
+        }
+        if let error = requestError.value {
+            throw error
+        }
         let calls = session.calls.value
         XCTAssertEqual(calls.count, 1)
         let call = try XCTUnwrap(calls.first)

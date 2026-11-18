@@ -72,69 +72,96 @@ final class NetContentTypeTests: XCTestCase {
     func testInvalidManualHeadersFailBeforeCreatingTaskEvenWithoutBody() {
         for value in ["text/plain\r\nX: yes", "text/plain\n", "text/plain; charset=\"utf-8", "text"] {
             let session = NetTestSession()
-            XCTAssertThrowsError(try Net.sendRequest(
+            let handlerCount = SafeValue(0)
+            Net.sendRequest(
                 url: "https://example.test", method: "POST", headers: ["cOnTeNt-TyPe": value], session: session
-            )) { error in
-                guard case Net.NetErrors.InvalidContentType(let actual) = error else {
-                    return XCTFail("Unexpected error: \(error)")
+            ) { data, response, error in
+                handlerCount.change { $0 += 1 }
+                XCTAssertNil(data)
+                XCTAssertNil(response)
+                guard let error, case Net.NetErrors.InvalidContentType(let actual) = error else {
+                    return XCTFail("Unexpected error: \(String(describing: error))")
                 }
                 XCTAssertEqual(actual, value)
             }
             XCTAssertTrue(session.calls.value.isEmpty)
+            XCTAssertEqual(handlerCount.value, 1)
         }
     }
 
     func testDuplicateContentTypeHeaderNamesAreRejected() {
         let session = NetTestSession()
-        XCTAssertThrowsError(try Net.sendRequest(
+        let handlerCount = SafeValue(0)
+        Net.sendRequest(
             url: "https://example.test", method: "POST",
             headers: ["Content-Type": "application/json", "content-type": "text/plain"],
             body: .json(["value": 1]), session: session
-        ))
+        ) { data, response, error in
+            handlerCount.change { $0 += 1 }
+            XCTAssertNil(data)
+            XCTAssertNil(response)
+            guard let error, case Net.NetErrors.InvalidContentType = error else {
+                return XCTFail("Unexpected error: \(String(describing: error))")
+            }
+        }
         XCTAssertTrue(session.calls.value.isEmpty)
+        XCTAssertEqual(handlerCount.value, 1)
     }
 
     func testMultipartHeaderCannotReplaceAutomaticallyGeneratedBoundary() {
         let session = NetTestSession()
         let actual = "multipart/form-data; boundary=incorrect"
-        XCTAssertThrowsError(try Net.sendRequest(
+        let handlerCount = SafeValue(0)
+        Net.sendRequest(
             url: "https://example.test", method: "POST", headers: ["Content-Type": actual],
             body: .multipart([.field(name: "field", value: "value")]), session: session
-        )) { error in
-            guard case Net.NetErrors.ConflictingContentType(let expected, let received) = error else {
-                return XCTFail("Unexpected error: \(error)")
+        ) { data, response, error in
+            handlerCount.change { $0 += 1 }
+            XCTAssertNil(data)
+            XCTAssertNil(response)
+            guard let error, case Net.NetErrors.ConflictingContentType(let expected, let received) = error else {
+                return XCTFail("Unexpected error: \(String(describing: error))")
             }
             XCTAssertTrue(expected.hasPrefix("multipart/form-data; boundary=Boundary-"))
             XCTAssertEqual(received, actual)
         }
         XCTAssertTrue(session.calls.value.isEmpty)
+        XCTAssertEqual(handlerCount.value, 1)
     }
 
-    func testInvalidMultipartMIMETypeFailsBeforeTaskAndHooks() {
+    func testInvalidMultipartMIMETypeFailsBeforeCreatingTask() {
         let session = NetTestSession()
-        let hooks = SafeValue<[String]>([])
+        let handlerCount = SafeValue(0)
         let mime = "image/png\r\nX-Injected: yes"
         let file = NetSessionFile(data: Data([42]), fileName: "file.png", mimeType: .custom(mime))
-        XCTAssertThrowsError(try Net.sendRequest(
+        Net.sendRequest(
             url: "https://example.test", method: "POST", body: .multipart([.file(name: "file", file: file)]),
-            session: session, beforeResume: { hooks.change { $0.append("before") } },
-            afterResume: { hooks.change { $0.append("after") } }
-        ) { _, _, _ in hooks.change { $0.append("callback") } }) { error in
-            guard case Net.NetErrors.InvalidContentType(let actual) = error else {
-                return XCTFail("Unexpected error: \(error)")
+            session: session
+        ) { data, response, error in
+            handlerCount.change { $0 += 1 }
+            XCTAssertNil(data)
+            XCTAssertNil(response)
+            guard let error, case Net.NetErrors.InvalidContentType(let actual) = error else {
+                return XCTFail("Unexpected error: \(String(describing: error))")
             }
             XCTAssertEqual(actual, mime)
         }
         XCTAssertTrue(session.calls.value.isEmpty)
-        XCTAssertTrue(hooks.value.isEmpty)
+        XCTAssertEqual(handlerCount.value, 1)
     }
 
     private func makeRequest(expected: String, actual: String) throws -> URLRequest {
         let session = NetTestSession()
-        try Net.sendRequest(
+        let requestError = SafeValue<Error?>(nil)
+        Net.sendRequest(
             url: "https://example.test", method: "POST", headers: ["Content-Type": actual],
             body: .raw(data: Data([0, 255, 42]), contentType: .custom(expected)), session: session
-        )
+        ) { _, _, error in
+            requestError.change { $0 = error }
+        }
+        if let error = requestError.value {
+            throw error
+        }
         return try XCTUnwrap(session.calls.value.first?.request)
     }
 }
