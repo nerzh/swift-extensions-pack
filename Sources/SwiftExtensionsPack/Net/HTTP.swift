@@ -389,9 +389,8 @@ public final class Net {
     }
 
     public static func urlEncode(_ string: String) -> String {
-        let allowedCharacters = CharacterSet(
-            charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_"
-        )
+        var allowedCharacters = CharacterSet.alphanumerics
+        allowedCharacters.insert(charactersIn: ".-_")
         return string.addingPercentEncoding(
             withAllowedCharacters: allowedCharacters
         ) ?? ""

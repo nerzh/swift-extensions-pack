@@ -25,9 +25,8 @@ extension NetBody {
         case let .json(value):
             return (try JSONEncoder().encode(value), NetMIMEType.json.rawValue)
         case let .form(fields):
-            let allowedCharacters = CharacterSet(
-                charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789*-._"
-            )
+            var allowedCharacters = CharacterSet.alphanumerics
+            allowedCharacters.insert(charactersIn: "*-._")
             let components = try fields.sorted { $0.key < $1.key }.map { name, value in
                 guard
                     let encodedName = name.addingPercentEncoding(withAllowedCharacters: allowedCharacters),
