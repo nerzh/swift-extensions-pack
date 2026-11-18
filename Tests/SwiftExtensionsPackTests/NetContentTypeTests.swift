@@ -19,6 +19,9 @@ final class NetContentTypeTests: XCTestCase {
             ("application/example; empty=\"\"", "Application/Example; EMPTY=\"\"")
         ]
         for (expected, actual) in pairs {
+            XCTAssertNoThrow(try NetContentType.validate(expected))
+            XCTAssertNoThrow(try NetContentType.validate(actual))
+            XCTAssertEqual(try NetContentType(expected), try NetContentType(actual))
             let request = try makeRequest(expected: expected, actual: actual)
             XCTAssertEqual(request.value(forHTTPHeaderField: "Content-Type"), expected)
             XCTAssertEqual(request.httpBody, Data([0, 255, 42]))
@@ -55,6 +58,8 @@ final class NetContentTypeTests: XCTestCase {
             "text/plain; profile=\"escaped\\\nnewline\""
         ]
         for value in invalid {
+            XCTAssertThrowsError(try NetContentType.validate(value), value)
+            XCTAssertThrowsError(try NetContentType(value), value)
             XCTAssertThrowsError(try NetBody.raw(data: Data([42]), contentType: .custom(value)).encoded(), value) { error in
                 guard case Net.NetErrors.InvalidContentType(let actual) = error else {
                     return XCTFail("Unexpected error: \(error)")

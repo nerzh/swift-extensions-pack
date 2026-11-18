@@ -20,7 +20,7 @@ extension NetBody {
     func encoded() throws -> (data: Data, contentType: String) {
         switch self {
         case let .raw(data, contentType):
-            _ = try NetContentType(contentType.rawValue)
+            try NetContentType.validate(contentType.rawValue)
             return (data, contentType.rawValue)
         case let .json(value):
             return (try JSONEncoder().encode(value), NetMIMEType.json.rawValue)

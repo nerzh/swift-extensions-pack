@@ -85,7 +85,7 @@ public class NetMultipartData {
         _ fileName: String,
         mimeType: NetMIMEType = .octetStream
     ) throws {
-        _ = try NetContentType(mimeType.rawValue)
+        try NetContentType.validate(mimeType.rawValue)
         body.appendString(boundaryPrefix)
         body.appendString(
             "Content-Disposition: form-data; name=\"\(escapeDispositionParameter(name))\"; filename=\"\(escapeDispositionParameter(fileName))\"\r\n"

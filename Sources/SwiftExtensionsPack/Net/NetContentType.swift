@@ -7,6 +7,14 @@ struct NetContentType: Equatable {
     private let parameters: [String: [UInt8]]
 
     init(_ value: String) throws {
+        let validated = try Self.validate(value)
+        self.type = validated.type
+        self.subtype = validated.subtype
+        self.parameters = validated.parameters
+    }
+
+    @discardableResult
+    static func validate(_ value: String) throws -> (type: String, subtype: String, parameters: [String: [UInt8]]) {
         var parser = Parser(bytes: Array(value.utf8))
         guard parser.bytes.allSatisfy({ $0 == 9 || ($0 >= 32 && $0 != 127) }) else {
             throw Net.NetErrors.InvalidContentType(value)
@@ -33,9 +41,11 @@ struct NetContentType: Equatable {
                 ? parameter.map { (65...90).contains($0) ? $0 + 32 : $0 }
                 : parameter
         }
-        self.type = String(decoding: type, as: UTF8.self).lowercased()
-        self.subtype = String(decoding: subtype, as: UTF8.self).lowercased()
-        self.parameters = parameters
+        return (
+            type: String(decoding: type, as: UTF8.self).lowercased(),
+            subtype: String(decoding: subtype, as: UTF8.self).lowercased(),
+            parameters: parameters
+        )
     }
 
     private struct Parser {
