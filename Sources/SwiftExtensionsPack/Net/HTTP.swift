@@ -174,8 +174,7 @@ public final class Net {
         let config = URLSessionConfiguration.default
         config.requestCachePolicy = .reloadIgnoringLocalCacheData
         config.urlCache = nil
-        //        config.timeoutIntervalForRequest  = 1000
-        //        config.timeoutIntervalForResource = 0
+        config.timeoutIntervalForResource = 600
         return config
     }()
 
