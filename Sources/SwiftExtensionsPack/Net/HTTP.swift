@@ -173,15 +173,15 @@ public final class Net {
         case NotValidParams
         case SomeError
         case BadData
+        case ConflictingContentType(expected: String, actual: String)
     }
 
     public static func sendRequest(
         url: String,
         method: String,
         headers: [String: String]? = nil,
-        params: [String: Any]? = nil,
-        body: Data? = nil,
-        multipart: Bool = false,
+        queryParams: [String: Any]? = nil,
+        body: NetBody? = nil,
         session: URLSession? = nil,
         beforeResume: (() -> Void)? = {},
         afterResume: (() -> Void)? = {},
@@ -192,9 +192,8 @@ public final class Net {
             url: url,
             method: method,
             headers: headers,
-            params: params,
-            body: body,
-            multipart: multipart
+            queryParams: queryParams,
+            body: body
         )
 
         let dataTask = (session ?? sharedSession).dataTask(
@@ -220,9 +219,8 @@ public final class Net {
         url: String,
         method: String,
         headers: [String: String]? = nil,
-        params: [String: Any]? = nil,
-        body: Data? = nil,
-        multipart: Bool = false,
+        queryParams: [String: Any]? = nil,
+        body: NetBody? = nil,
         session: URLSession? = nil
     ) async throws -> (data: Data, response: URLResponse) {
         return try await withCheckedThrowingContinuation { continuation in
@@ -231,9 +229,8 @@ public final class Net {
                     url: url,
                     method: method,
                     headers: headers,
-                    params: params,
+                    queryParams: queryParams,
                     body: body,
-                    multipart: multipart,
                     session: session,
                     beforeResume: nil,
                     afterResume: nil
@@ -260,11 +257,10 @@ public final class Net {
         url: String,
         method: String,
         headers: [String: String]? = nil,
-        params: [String: Any]? = nil,
-        body: Data? = nil,
-        multipart: Bool = false
+        queryParams: [String: Any]? = nil,
+        body: NetBody? = nil
     ) throws -> URLRequest {
-        let fullUrl = multipart ? url : "\(url)\(makeQueryParamsString(params))"
+        let fullUrl = "\(url)\(makeQueryParamsString(queryParams))"
         guard let requestUrl = URL(string: fullUrl) else {
             throw NetErrors.NotValidParams
         }
@@ -272,18 +268,18 @@ public final class Net {
         request.httpMethod = method
         request.allHTTPHeaderFields = headers
 
-        if method.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-            == "get"
-        {
-            return request
-        }
-
-        if multipart {
-            request.setMultipartBody(from: params)
-        } else if let body = body {
-            request.httpBody = body
-        } else {
-            request.setBody(from: params)
+        if let body {
+            let encodedBody = try body.encoded()
+            if let contentType = request.value(forHTTPHeaderField: "Content-Type"),
+                contentType != encodedBody.contentType
+            {
+                throw NetErrors.ConflictingContentType(
+                    expected: encodedBody.contentType,
+                    actual: contentType
+                )
+            }
+            request.setValue(encodedBody.contentType, forHTTPHeaderField: "Content-Type")
+            request.httpBody = encodedBody.data
         }
 
         return request
@@ -364,25 +360,5 @@ public final class Net {
         var result = ""
         checkValue("", anyObject as AnyObject, &result)
         return result
-    }
-}
-
-extension URLRequest {
-
-    mutating func setMultipartBody(from params: [String: Any]?) {
-        let body = NetMultipartData()
-        self.setValue(
-            "multipart/form-data; boundary=\(body.boundary)",
-            forHTTPHeaderField: "Content-Type"
-        )
-        self.addValue("application/json", forHTTPHeaderField: "Accept")
-
-        self.httpBody = body.toRailsMultipartData(params ?? [:]) as Data
-    }
-
-    mutating func setBody(from params: [String: Any]?) {
-        self.httpBody = Net.paramsString(params).data(
-            using: String.Encoding.utf8
-        )
     }
 }
