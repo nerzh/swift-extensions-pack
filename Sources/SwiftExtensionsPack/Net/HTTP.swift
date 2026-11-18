@@ -260,8 +260,19 @@ public final class Net {
         queryParams: [String: Any]? = nil,
         body: NetBody? = nil
     ) throws -> URLRequest {
-        let fullUrl = "\(url)\(makeQueryParamsString(queryParams))"
-        guard let requestUrl = URL(string: fullUrl) else {
+        guard var components = URLComponents(string: url) else {
+            throw NetErrors.NotValidParams
+        }
+        let additionalQuery = paramsString(queryParams)
+        if !additionalQuery.isEmpty {
+            if let existingQuery = components.percentEncodedQuery, !existingQuery.isEmpty {
+                let separator = existingQuery.hasSuffix("&") ? "" : "&"
+                components.percentEncodedQuery = "\(existingQuery)\(separator)\(additionalQuery)"
+            } else {
+                components.percentEncodedQuery = additionalQuery
+            }
+        }
+        guard let requestUrl = components.url else {
             throw NetErrors.NotValidParams
         }
         var request = URLRequest(url: requestUrl)
@@ -287,11 +298,8 @@ public final class Net {
 
     public static func makeQueryParamsString(_ params: [String: Any]?) -> String
     {
-        guard let params = params else { return "" }
-        var queryParamsString = params.count > 0 ? "?" : ""
-        queryParamsString.append(paramsString(params))
-
-        return queryParamsString
+        let queryParamsString = paramsString(params)
+        return queryParamsString.isEmpty ? "" : "?\(queryParamsString)"
     }
 
     public static func paramsString(_ params: [String: Any]?) -> String {
@@ -299,8 +307,9 @@ public final class Net {
     }
 
     public static func urlEncode(_ string: String) -> String {
-        var allowedCharacters = CharacterSet.alphanumerics
-        allowedCharacters.insert(charactersIn: ".-_")
+        let allowedCharacters = CharacterSet(
+            charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_"
+        )
         return string.addingPercentEncoding(
             withAllowedCharacters: allowedCharacters
         ) ?? ""
@@ -313,11 +322,12 @@ public final class Net {
         guard let params = params else { return paramsString }
 
         for (key, value) in params {
+            let encodedKey = urlEncode(key)
             if first {
                 first = false
-                paramsString += "\(key)=\(urlEncode("\(value)"))"
+                paramsString += "\(encodedKey)=\(urlEncode("\(value)"))"
             } else {
-                paramsString += "\(separator)\(key)=\(urlEncode("\(value)"))"
+                paramsString += "\(separator)\(encodedKey)=\(urlEncode("\(value)"))"
             }
         }
 
@@ -348,10 +358,11 @@ public final class Net {
                     checkValue(newNodeName, dictionary[key]!, &queryParams)
                 }
             } else {
+                let name = urlEncode(parentName)
                 let value = urlEncode("\(anyObject)")
                 let pair =
                     queryParams.count == 0
-                    ? "\(parentName)=\(value)" : "&\(parentName)=\(value)"
+                    ? "\(name)=\(value)" : "&\(name)=\(value)"
                 queryParams.append(pair)
             }
         }
