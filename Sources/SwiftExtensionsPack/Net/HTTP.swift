@@ -74,7 +74,7 @@ public class NetMultipartData {
     public func append(_ name: String, _ value: Any) {
         body.appendString(boundaryPrefix)
         body.appendString(
-            "Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n"
+            "Content-Disposition: form-data; name=\"\(escapeDispositionParameter(name))\"\r\n\r\n"
         )
         body.appendString("\(value)\r\n")
     }
@@ -84,10 +84,11 @@ public class NetMultipartData {
         _ data: Data,
         _ fileName: String,
         mimeType: NetMIMEType = .octetStream
-    ) {
+    ) throws {
+        _ = try NetContentType(mimeType.rawValue)
         body.appendString(boundaryPrefix)
         body.appendString(
-            "Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(fileName)\"\r\n"
+            "Content-Disposition: form-data; name=\"\(escapeDispositionParameter(name))\"; filename=\"\(escapeDispositionParameter(fileName))\"\r\n"
         )
         body.appendString("Content-Type: \(mimeType.rawValue)\r\n\r\n")
         body.append(data)
@@ -95,16 +96,29 @@ public class NetMultipartData {
     }
 
     public func finalizeBodyAndGetData() -> NSMutableData {
-        finalizeBody()
-        return body
+        // Keep the accumulated parts open and return an independent, finalized snapshot.
+        let result = NSMutableData(data: body as Data)
+        result.appendString(finishBoundary)
+        return result
     }
 
-    private func finalizeBody() {
-        body.appendString(finishBoundary)
+    private func escapeDispositionParameter(_ value: String) -> String {
+        var escaped = ""
+        for scalar in value.unicodeScalars {
+            switch scalar.value {
+            case 0...31, 34, 127:
+                escaped += String(format: "%%%02X", scalar.value)
+            case 92:
+                escaped += "\\\\"
+            default:
+                escaped.unicodeScalars.append(scalar)
+            }
+        }
+        return escaped
     }
 
-    public func toRailsMultipartData(_ anyObject: Any) -> NSMutableData {
-        func checkValue(_ parentName: String, _ anyObject: Any) {
+    public func toRailsMultipartData(_ anyObject: Any) throws -> NSMutableData {
+        func checkValue(_ parentName: String, _ anyObject: Any) throws {
             if let array = anyObject as? [Any] {
                 for (index, element) in array.enumerated() {
                     var newNodeName: String = .init()
@@ -113,18 +127,18 @@ public class NetMultipartData {
                     } else {
                         newNodeName = "\(parentName)[\(index)]"
                     }
-                    checkValue(newNodeName, element)
+                    try checkValue(newNodeName, element)
                 }
             } else if let dictionary = anyObject as? [String: Any] {
                 for key in dictionary.keys {
                     let newNodeName =
                         parentName.count == 0
                         ? "\(key)" : "\(parentName)[\(key)]"
-                    checkValue(newNodeName, dictionary[key]!)
+                    try checkValue(newNodeName, dictionary[key]!)
                 }
             } else {
                 if let file = anyObject as? NetSessionFilePrtcl {
-                    appendFile(
+                    try appendFile(
                         parentName,
                         file.data,
                         file.fileName,
@@ -136,7 +150,7 @@ public class NetMultipartData {
             }
         }
 
-        checkValue("", anyObject as AnyObject)
+        try checkValue("", anyObject as AnyObject)
         return finalizeBodyAndGetData()
     }
 }
@@ -144,8 +158,8 @@ public class NetMultipartData {
 // MARK: Extension Dictionary to Multipart (Recursive)
 extension Dictionary {
 
-    func toRailsMultipartData() -> NSMutableData {
-        return NetMultipartData().toRailsMultipartData(self)
+    func toRailsMultipartData() throws -> NSMutableData {
+        return try NetMultipartData().toRailsMultipartData(self)
     }
 
     //    MARK: Ruby On Rails
@@ -173,6 +187,7 @@ public final class Net {
         case NotValidParams
         case SomeError
         case BadData
+        case InvalidContentType(String)
         case ConflictingContentType(expected: String, actual: String)
     }
 
@@ -337,12 +352,19 @@ public final class Net {
         }
         var request = URLRequest(url: requestUrl)
         request.httpMethod = method
+        let contentTypes = headers?.filter { $0.key.lowercased() == "content-type" }.map(\.value) ?? []
+        guard contentTypes.count <= 1 else {
+            throw NetErrors.InvalidContentType(contentTypes.joined(separator: ", "))
+        }
+        let contentType = contentTypes.first
+        // Validate the original value before URLRequest can normalize it.
+        let parsedContentType = try contentType.map { try NetContentType($0) }
         request.allHTTPHeaderFields = headers
 
         if let body {
             let encodedBody = try body.encoded()
-            if let contentType = request.value(forHTTPHeaderField: "Content-Type"),
-                contentType != encodedBody.contentType
+            if let contentType, let parsedContentType,
+                parsedContentType != (try NetContentType(encodedBody.contentType))
             {
                 throw NetErrors.ConflictingContentType(
                     expected: encodedBody.contentType,

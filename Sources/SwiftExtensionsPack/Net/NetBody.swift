@@ -20,6 +20,7 @@ extension NetBody {
     func encoded() throws -> (data: Data, contentType: String) {
         switch self {
         case let .raw(data, contentType):
+            _ = try NetContentType(contentType.rawValue)
             return (data, contentType.rawValue)
         case let .json(value):
             return (try JSONEncoder().encode(value), NetMIMEType.json.rawValue)
@@ -44,7 +45,7 @@ extension NetBody {
                 case let .field(name, value):
                     multipart.append(name, value)
                 case let .file(name, file):
-                    multipart.appendFile(name, file.data, file.fileName, mimeType: file.mimeType)
+                    try multipart.appendFile(name, file.data, file.fileName, mimeType: file.mimeType)
                 }
             }
             return (

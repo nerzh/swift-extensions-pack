@@ -136,9 +136,9 @@ final class NetBodyTests: XCTestCase {
         XCTAssertTrue(body.contains("Content-Type: application/vnd.net-test\r\n\r\n+\r\n"))
     }
 
-    func testMultipartBuilderUsesProvidedBoundaryAndDefaultFileType() {
+    func testMultipartBuilderUsesProvidedBoundaryAndDefaultFileType() throws {
         let multipart = NetMultipartData(boundary: "fixed-boundary")
-        multipart.appendFile("file", Data([42]), "data.bin")
+        try multipart.appendFile("file", Data([42]), "data.bin")
         let expected = Data((
             "--fixed-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"data.bin\"\r\n"
             + "Content-Type: application/octet-stream\r\n\r\n*\r\n--fixed-boundary--"

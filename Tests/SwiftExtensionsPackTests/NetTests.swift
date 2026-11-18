@@ -304,7 +304,9 @@ final class NetTests: XCTestCase {
         defer { session.invalidateAndCancel() }
         let handlerCount = SafeValue(0)
 
-        XCTAssertNoThrow(try Net.sendRequest(url: baseURL, method: "GET", session: session) {
+        XCTAssertNoThrow(try Net.sendRequest(
+            url: baseURL, method: "GET", session: session, beforeResume: nil, afterResume: nil
+        ) {
             receivedData, receivedResponse, error in
             handlerCount.change { $0 += 1 }
             XCTAssertEqual(receivedData, data)
@@ -321,7 +323,9 @@ final class NetTests: XCTestCase {
         defer { session.invalidateAndCancel() }
         let handlerCount = SafeValue(0)
 
-        XCTAssertNoThrow(try Net.sendRequest(url: baseURL, method: "GET", session: session) {
+        XCTAssertNoThrow(try Net.sendRequest(
+            url: baseURL, method: "GET", session: session, beforeResume: nil, afterResume: nil
+        ) {
             data, response, error in
             handlerCount.change { $0 += 1 }
             XCTAssertNil(data)
