@@ -1,12 +1,12 @@
 import Foundation
 
 public enum NetBody {
-    case raw(data: Data, contentType: String)
+    case raw(data: Data, contentType: NetMIMEType = .octetStream)
     case json(any Encodable)
     case form([String: String])
     case multipart([NetMultipartPart])
 
-    public static func raw(_ string: String, contentType: String) -> NetBody {
+    public static func raw(_ string: String, contentType: NetMIMEType = .octetStream) -> NetBody {
         .raw(data: Data(string.utf8), contentType: contentType)
     }
 }
@@ -20,9 +20,9 @@ extension NetBody {
     func encoded() throws -> (data: Data, contentType: String) {
         switch self {
         case let .raw(data, contentType):
-            return (data, contentType)
+            return (data, contentType.rawValue)
         case let .json(value):
-            return (try JSONEncoder().encode(value), "application/json")
+            return (try JSONEncoder().encode(value), NetMIMEType.json.rawValue)
         case let .form(fields):
             let allowedCharacters = CharacterSet(
                 charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789*-._"
@@ -36,7 +36,7 @@ extension NetBody {
                 }
                 return "\(encodedName)=\(encodedValue)".replacingOccurrences(of: "%20", with: "+")
             }
-            return (Data(components.joined(separator: "&").utf8), "application/x-www-form-urlencoded")
+            return (Data(components.joined(separator: "&").utf8), NetMIMEType.formURLEncoded.rawValue)
         case let .multipart(parts):
             let multipart = NetMultipartData()
             for part in parts {
@@ -49,7 +49,7 @@ extension NetBody {
             }
             return (
                 multipart.finalizeBodyAndGetData() as Data,
-                "multipart/form-data; boundary=\(multipart.boundary)"
+                "\(NetMIMEType.multipartFormData.rawValue); boundary=\(multipart.boundary)"
             )
         }
     }

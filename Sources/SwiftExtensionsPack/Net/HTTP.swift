@@ -13,7 +13,7 @@ import Foundation
 
 public protocol NetSessionFilePrtcl {
 
-    var mimeType: String { get set }
+    var mimeType: NetMIMEType { get set }
     var data: Data { get set }
     var fileName: String { get set }
 }
@@ -23,9 +23,9 @@ public struct NetSessionFile: NetSessionFilePrtcl {
 
     public var data: Data
     public var fileName: String
-    public var mimeType: String
+    public var mimeType: NetMIMEType
 
-    public init(data: Data, fileName: String, mimeType: String) {
+    public init(data: Data, fileName: String, mimeType: NetMIMEType = .octetStream) {
         self.data = data
         self.fileName = fileName
         self.mimeType = mimeType
@@ -83,13 +83,13 @@ public class NetMultipartData {
         _ name: String,
         _ data: Data,
         _ fileName: String,
-        mimeType: String
+        mimeType: NetMIMEType = .octetStream
     ) {
         body.appendString(boundaryPrefix)
         body.appendString(
             "Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(fileName)\"\r\n"
         )
-        body.appendString("Content-Type: \(mimeType)\r\n\r\n")
+        body.appendString("Content-Type: \(mimeType.rawValue)\r\n\r\n")
         body.append(data)
         body.appendString("\r\n")
     }
