@@ -296,6 +296,43 @@ final class NetTests: XCTestCase {
         XCTAssertEqual(handlerCount.value, 1)
     }
 
+    func testThrowingCallbackIsNotCalledAgainAfterSuccess() throws {
+        let url = try XCTUnwrap(URL(string: baseURL))
+        let response = try XCTUnwrap(HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil))
+        let data = Data([0, 255, 42])
+        let session = NetTestSession(reply: NetTestReply(data: data, response: response))
+        defer { session.invalidateAndCancel() }
+        let handlerCount = SafeValue(0)
+
+        XCTAssertNoThrow(try Net.sendRequest(url: baseURL, method: "GET", session: session) {
+            receivedData, receivedResponse, error in
+            handlerCount.change { $0 += 1 }
+            XCTAssertEqual(receivedData, data)
+            XCTAssertEqual((receivedResponse as? HTTPURLResponse)?.statusCode, 200)
+            XCTAssertNil(error)
+            throw NetTestError.handlerFailed
+        })
+
+        XCTAssertEqual(handlerCount.value, 1)
+    }
+
+    func testThrowingCallbackIsNotCalledAgainAfterTransportError() {
+        let session = NetTestSession(reply: NetTestReply(error: URLError(.timedOut)))
+        defer { session.invalidateAndCancel() }
+        let handlerCount = SafeValue(0)
+
+        XCTAssertNoThrow(try Net.sendRequest(url: baseURL, method: "GET", session: session) {
+            data, response, error in
+            handlerCount.change { $0 += 1 }
+            XCTAssertNil(data)
+            XCTAssertNil(response)
+            XCTAssertEqual((error as? URLError)?.code, .timedOut)
+            throw NetTestError.handlerFailed
+        })
+
+        XCTAssertEqual(handlerCount.value, 1)
+    }
+
     @MainActor
     func testAsyncAPIReturnsResponseData() async throws {
         guard #available(macOS 12, *) else { throw XCTSkip("Async Net requires macOS 12") }

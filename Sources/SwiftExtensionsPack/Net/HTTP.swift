@@ -199,11 +199,9 @@ public final class Net {
         let dataTask = (session ?? sharedSession).dataTask(
             with: request,
             completionHandler: { (data, response, error) -> Void in
-                do {
-                    try handler(data, response, error)
-                } catch {
-                    try? handler(nil, nil, error)
-                }
+                // Keep the throwing signature for compatibility. Callback errors cannot
+                // propagate through sendRequest's throws and must not trigger redelivery.
+                try? handler(data, response, error)
             }
         )
 
