@@ -3,6 +3,51 @@ import XCTest
 @testable import SwiftExtensionsPack
 
 final class LimiterAsyncTests: XCTestCase, @unchecked Sendable {
+    func testPauseClosesRemainingSlotsAndOnlyExtendsDeadline() async {
+        let limiter = LimiterAsync(maxRequests: 2, per: 1)
+        let first = await limiter.tryAcquire()
+        XCTAssertEqual(first, .acquired)
+
+        let deadline = DispatchTime.now() + .seconds(17)
+        await limiter.blockAllSlots(until: deadline)
+        let paused = await limiter.tryAcquire()
+        XCTAssertEqual(paused, .retryAt(deadline))
+
+        let later = deadline + .seconds(5)
+        await limiter.blockAllSlots(until: later)
+        await limiter.blockAllSlots(until: deadline)
+        let extended = await limiter.tryAcquire()
+        XCTAssertEqual(extended, .retryAt(later))
+    }
+
+    func testAcquireResumesWithFullCapacityAfterPause() async {
+        let limiter = LimiterAsync(maxRequests: 2, per: 60)
+        let deadline = DispatchTime.now() + .milliseconds(50)
+        await limiter.blockAllSlots(until: deadline)
+
+        let finished = expectation(description: "Acquire resumes after the pause")
+        let worker = Task {
+            let first = await limiter.acquire()
+            XCTAssertTrue(first)
+            XCTAssertGreaterThanOrEqual(DispatchTime.now(), deadline)
+            let second = await limiter.tryAcquire()
+            XCTAssertEqual(second, .acquired)
+            finished.fulfill()
+        }
+        await fulfillment(of: [finished], timeout: 3)
+        worker.cancel()
+    }
+
+    func testExpiredPauseLeavesAvailableSlotsOpen() async {
+        let limiter = LimiterAsync(maxRequests: 2, per: 60)
+        let first = await limiter.tryAcquire()
+        XCTAssertEqual(first, .acquired)
+
+        await limiter.blockAllSlots(until: .now())
+        let second = await limiter.tryAcquire()
+        XCTAssertEqual(second, .acquired)
+    }
+
     func testConcurrentCallersSeeOneDeadlineWhenTheWindowIsFull() async {
         let limiter = LimiterAsync(maxRequests: 5, per: 60)
         let attempts = await withTaskGroup(of: LimiterAsync.Acquisition.self) { group in

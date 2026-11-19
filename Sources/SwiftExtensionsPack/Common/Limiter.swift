@@ -30,6 +30,12 @@ public actor LimiterAsync {
         self.interval = interval
     }
 
+    public func blockAllSlots(until deadline: DispatchTime) async {
+        guard deadline > .now() else { return }
+        currentCount = maxRequests
+        windowEnd = max(windowEnd, deadline)
+    }
+
     public func stop() async {
         isStopped = true
         for sleeper in sleepers.values {
