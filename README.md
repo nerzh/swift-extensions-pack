@@ -497,34 +497,23 @@ These wrappers synchronize reading and writing the reference itself. Mutating th
 
 ### LimiterAsync
 
-`LimiterAsync` limits the number of async operations per time interval.
+Share one limiter across requests. When the current window is full, `await limiter.acquire()` waits for a slot and returns `true` once it has claimed one. It returns `false` if the caller is cancelled, the limiter has been stopped, or its capacity is zero or negative.
 
 ```swift
 let limiter = LimiterAsync(maxRequests: 5, per: 1.0)
 
-try await limiter.run {
-    let (data, _) = try await Net.sendRequest(
-        url: "https://example.com/api",
-        method: "GET"
-    )
-    print(data.count)
+func fetch(_ url: String) async throws -> Data {
+    guard await limiter.acquire() else { throw CancellationError() }
+    let (data, _) = try await Net.sendRequest(url: url, method: "GET")
+    return data
 }
-
-let acquired = await limiter.acquire()
-if acquired {
-    // Run the operation.
-}
-
-await limiter.stop()
 ```
 
-| API | Description |
+| Other methods | When to use them |
 | --- | --- |
-| `init(maxRequests:per:)` | Creates a limiter for `maxRequests` operations per `TimeInterval`. |
-| `acquire()` | Waits for an available slot and returns `Bool`. |
-| `run(_ operation: () async throws -> T)` | Waits for a slot and runs an async closure. |
-| `run(_ operation: (Bool) async throws -> T)` | Passes a cancellation flag into the closure. |
-| `stop()` | Cancels the internal timer task. |
+| `tryAcquire()` | Check immediately. A full window returns `.retryAt(deadline)`. Try again at that time to claim a slot. |
+| `run { ... }` | Convenience wrapper around `acquire()`. It calls the closure even if acquisition returns `false`. The `run { isCancelled in ... }` overload lets the closure check that outcome. |
+| `stop()` | Call once when shutting down the limiter to wake waiting callers and stop granting slots. |
 
 ## Crypto
 
